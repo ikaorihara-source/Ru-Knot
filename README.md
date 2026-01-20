@@ -1,4 +1,4 @@
-# 露刻 (Ru-Knot) 🕯️
+# 露刻 (Ru-Knot) ⏰
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-blue.svg)
 ![Android](https://img.shields.io/badge/Android-Jetpack_Compose-green.svg)
