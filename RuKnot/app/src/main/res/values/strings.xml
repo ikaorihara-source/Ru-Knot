@@ -1,0 +1,194 @@
+<resources>
+    <string name="app_name">Ru-Knot</string>
+
+    <string name="splash_quote_1">My time only</string>
+    <string name="splash_quote_2">truly begins to flow</string>
+    <string name="splash_quote_3">the second your notification rings.</string>
+
+    <string name="welcome_title">Welcome to %1$s</string>
+    <string name="agree_eula_desc">Before you begin using this service, please carefully read and agree to the User Agreement and Privacy Policy.</string>
+    <string name="btn_agree_continue">Agree and Continue</string>
+
+    <string name="toast_missing_permissions">The application cannot function without the necessary permissions</string>
+    <string name="need_permissions_title">Require necessary permissions</string>
+    <string name="need_permissions_message">This application requires the [Notifications] and [Audio Read] permissions to function properly for ringtone monitoring. Please tap Allow in the upcoming pop-up window.</string>
+
+    <string name="prevent_bg_terminated_title">Prevent background processes terminated</string>
+    <string name="prevent_bg_terminated_message">Please add this application to the battery optimization whitelist, otherwise the monitoring service may be interrupted at any time.</string>
+
+    <string name="need_full_screen_title">Requires full-screen display permission</string>
+    <string name="need_full_screen_message">To enable the alarm interface to pop up immediately when the streamer goes live, please allow the app to send full-screen intents.</string>
+
+    <string name="allow_precise_alarm_title">Requires precise alarm clock permissions</string>
+    <string name="allow_precise_alarm_message">To ensure the monitor wakes up on time at the set time, please enable the precise alarm clock permission.</string>
+
+    <string name="allow_ensure_no_miss_title">Ensure the alarm no missed</string>
+    <string name="allow_ensure_no_miss_message">You must manually enable the [Auto-Start] permission to ensure monitoring resumes automatically after your phone restarts. Please locate [Auto-Start] or [Permission Management] on the redirected page to configure this setting.</string>
+
+    <string name="nav_room">Rooms</string>
+    <string name="nav_alarm">Alarms</string>
+    <string name="nav_setting">Setting</string>
+    <string name="nav_links">Links</string>
+
+    <string name="btn_add">Add</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+
+    <string name="btn_edit">Edit</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_enable">Turn On</string>
+    <string name="btn_disable">Turn Off</string>
+
+    <string name="btn_acknowledged">Acknowledged</string>
+    <string name="btn_setting">Setting</string>
+    <string name="btn_exit">Exit</string>
+    <string name="btn_close">Close</string>
+
+    <string name="label_rotation">Rotation</string>
+    <string name="label_expand">Expand</string>
+
+    <string name="label_language">Language</string>
+    <string name="follow_system">Follow system</string>
+    <string name="label_night_mode">Night mode</string>
+    <string name="enable_night_mode">Enable night mode</string>
+    <string name="disable_night_mode">Disable night mode</string>
+    <string name="label_data_sync_frequency">Data sync frequency</string>
+    <string name="label_live_detection_interval">Live stream detection interval: %1$s seconds</string>
+    <string name="live_detection_interval_description">The shorter the interval, the faster the broadcast reminder, but battery consumption will increase (recommended: 30 seconds).</string>
+    <string name="label_streamer_info_sync_interval">Streamer info sync interval: %1$s seconds</string>
+    <string name="streamer_info_sync_interval_description">Synchronize profile pictures, names, follower counts, and likes (recommended 60 seconds).</string>
+    <string name="label_global_volume">Global volume</string>
+    <string name="global_volume_description">When the volume of a single alarm is set to "Global volume" (0), this will be used as the default volume.</string>
+    <string name="label_personalized_background">Personalized background</string>
+    <string name="personalized_background_description">A total of %1$s backgrounds have been provided. Please select one image as the background.</string>
+    <string name="default_background">Default</string>
+    <string name="label_random_background">Randomly switch backgrounds</string>
+    <string name="random_background_description">Each time the app launches, it randomly displays one of the downloaded backgrounds.</string>
+    <string name="label_network_proxy">Network Proxy</string>
+    <string name="label_modify_proxy">Modify proxy</string>
+    <string name="modify_proxy_description">Accelerates the download of wallpaper lists and images.\nIf an image fails to load, please try a different one.</string>
+    <string name="example_proxy">Example %1$s</string>
+    <string name="recommend_nodes">Recommend Nodes: </string>
+    <string name="label_node">Node %1$s</string>
+    <string name="label_about_and_disclaimer">About and Disclaimer</string>
+    <string name="label_developer">Developer: Ika-Orihara</string>
+    <string name="label_version">Version: %1$s</string>
+
+    <string name="legal_info_title">Legal information</string>
+
+    <string name="label_eula">EULA</string>
+    <string name="label_privacy_policy">Privacy Policy</string>
+    <string name="label_open_source_licences">Open Source Licences</string>
+    <string name="label_special_thanks">Special Thanks</string>
+    <string name="label_about_developer">About Developer</string>
+    <string name="developer_for_love">Developer: Ika-Orihara\n\nPowered by Love for Orihara RuRu.</string>
+
+    <string name="status_enabled">Enabled</string>
+    <string name="status_disabled">Disabled</string>
+
+    <string name="no_streamers_hint">No streamers added yet. Tap + to add</string>
+    <string name="btn_add_room">Add Room</string>
+
+    <string name="status_live">Live</string>
+    <string name="status_offline">Offline</string>
+    <string name="unknown_user">Unknown User</string>
+    <string name="cover_desc">Cover Image</string>
+    <string name="delete_desc">Delete Room</string>
+    <string name="pin_desc">Pin Room</string>
+    <string name="lock_desc">Lock Room</string>
+
+    <string name="do_not_delete_desc">Do not delete</string>
+    <string name="ruru_always_pinned">RuRu must always be pinned to the top!</string>
+    <string name="can_not_delete_ruru">This is RuRu —— don\'t delete it!</string>
+
+    <string name="room_locked">Room locked</string>
+    <string name="room_unlock">Room unlock</string>
+
+    <string name="add_streamer_title">Add Streamer</string>
+    <string name="edit_streamer_title">Edit Streamer</string>
+    <string name="label_room_id">Enter Room ID</string>
+    <string name="label_ringtone">Alarm Ringtone: </string>
+    <string name="label_vibrate_only">Vibrate only (no ringtone)</string>
+    <string name="toast_hidden_ringtone">Hidden ringtones unlocked!</string>
+    <string name="ringtone_default">Default (Time-based/Includes hidden ringtones)</string>
+    <string name="ringtone_customize_selected">Custom File (Selected)</string>
+    <string name="ringtone_customize">Customize…</string>
+
+    <string name="no_alarms_hint">No alarms added yet. Tap + to add</string>
+    <string name="btn_add_schedule">Add Schedule</string>
+
+    <string name="add_alarm_title">Add Alarm</string>
+    <string name="edit_alarm_title">Edit Alarm</string>
+    <string name="label_alarm_name">Alarm Name</string>
+    <string name="link_streamer">Link Streamer</string>
+    <string name="select_streamer_placeholder">Select Streamer</string>
+    <string name="no_streamer_available">Please add a streamer first</string>
+    <string name="label_volume">Volume: %1$s</string>
+    <string name="label_active_time_range">Active Time Range</string>
+    <string name="label_start_time">Start Time</string>
+    <string name="label_end_time">End Time</string>
+    <string name="label_repeat_days">Repeat Days</string>
+    <string name="label_keywords">Keywords (Optional)</string>
+
+    <string name="alarm_once">Once</string>
+    <string name="alarm_monday">Mon</string>
+    <string name="alarm_tuesday">Tue</string>
+    <string name="alarm_wednesday">Wed</string>
+    <string name="alarm_thursday">Thu</string>
+    <string name="alarm_friday">Fri</string>
+    <string name="alarm_saturday">Sat</string>
+    <string name="alarm_sunday">Sun</string>
+
+    <string name="label_now_live">Streamer is now live!</string>
+    <string name="label_room_cover">Room cover</string>
+    <string name="label_alarm_rang">⏰ Alarm rang!</string>
+
+    <string name="dialog_delete_title">Delete?</string>
+    <string name="dialog_delete_message">Are you sure you want to delete %1$s?</string>
+
+    <string name="notify_go_live">%1$s is now live！</string>
+    <string name="notify_many_go_live">%1$s and others totally %2$s are now live!</string>
+    <string name="notify_great_now_live">Great news! %1$s streamers are now live!</string>
+    <string name="notify_offline">%1$s has gone offline</string>
+    <string name="notify_offline_message">This live stream has ended</string>
+
+    <string name="notify_channel_name">Alarm reminder</string>
+    <string name="notify_channel_description">When the streamer goes live, a full-screen alarm pops up</string>
+
+    <string name="notify_monitoring">%1$s is running</string>
+    <string name="notify_monitoring_message">Checking the live stream status in the background…</string>
+
+    <string name="notify_watch_stream">Watch stream</string>
+    <string name="notify_close_alarm">Turn off alarm</string>
+
+    <string name="notify_room_update">Room Status Update</string>
+
+    <string name="notify_service_resumption">Service Resumption Reminder</string>
+    <string name="notify_service_resumption_message">This notification is sent when the system forcibly terminates the background monitoring service.</string>
+
+    <string name="notify_service_suspended">Monitoring service has been suspended.</string>
+    <string name="notify_service_suspended_message">The system has cleared background services. Click here to restore monitoring.</string>
+
+    <string name="about_ruru_title">About Orihara RuRu</string>
+    <string name="about_ruru_description">Get to know RuRu.</string>
+    <string name="ruru_space_title">RuRu\'s Bilibili Space</string>
+    <string name="ruru_space_description">View RuRu\'s updates and submissions.</string>
+    <string name="ruru_workbench_title">RuRu\'s Workbench</string>
+    <string name="ruru_workbench_description">RuRu\'s Workbench allows you to check Fleet Gift delivery tracking numbers, recharge resources, and access material-related information.</string>
+    <string name="ruru_live_title">RuRu\'s Live Stream Room (22389206)</string>
+    <string name="ruru_live_description">Enter RuRu\'s Live Stream Room.</string>
+    <string name="ruru_taobao_title">RuRu\'s Tao Bao Shop</string>
+    <string name="ruru_taobao_description">RuRu packs all the joy and excitement from the livestream, disguises it as merchandise, and sends it to you. </string>
+    <string name="ruru_qq_title">RuRu\'s Mute Notification Group</string>
+    <string name="ruru_qq_description">Be the first to pick up RuRu\'s signal. Welcome aboard—tune in together.</string>
+    <string name="ruru_qq_yinyue_title">RuRu\'s QQ Music Homepage</string>
+    <string name="ruru_qq_yinyue_description">This is RuRu\'s Music Room. May you drift into a gentle, long dream amidst RuRu\'s singing.</string>
+    <string name="ruru_netease_cloud_title">RuRu\'s NetEase Cloud Music Homepage</string>
+    <string name="ruru_netease_cloud_description">May RuRu\'s voice catch every dip in your emotions. Thank you for listening.</string>
+    <string name="ruru_weibo_title">RuRu\'s Sina Weibo Homepage</string>
+    <string name="ruru_weibo_description">Rather than the glamorous streamer persona, I\'d rather you get to know the real, rant-loving RuRu. I stream when the mood strikes, focusing mainly on sharing everyday life.</string>
+    <string name="ruru_tiktok_title">RuRu\'s Dou Yin Homepage</string>
+    <string name="ruru_tiktok_description">Though I post infrequently, each video is carefully curated (I not assure xdd)</string>
+
+</resources>

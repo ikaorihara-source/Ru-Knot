@@ -1,0 +1,194 @@
+<resources>
+    <string name="app_name">露刻</string>
+
+    <string name="splash_quote_1">我的时间，</string>
+    <string name="splash_quote_2">只有在妳通知响铃的那一秒，</string>
+    <string name="splash_quote_3">才真正开始流动。</string>
+
+    <string name="welcome_title">欢迎使用%1$s</string>
+    <string name="agree_eula_desc">在开始使用之前，请您仔细阅读并同意《用户协议》和《隐私政策》。</string>
+    <string name="btn_agree_continue">同意并继续</string>
+
+    <string name="toast_missing_permissions">未获得必要权限，应用程序无法工作</string>
+    <string name="need_permissions_title">需要必要权限</string>
+    <string name="need_permissions_message">本应用程序需要【通知】和【音频读取】权限才能正常响铃监控。请在接下来的弹窗中点击允许。</string>
+
+    <string name="prevent_bg_terminated_title">防止后台被杀</string>
+    <string name="prevent_bg_terminated_message">请将本应用程序加入电池优化白名单，否则监控服务会随时中断。</string>
+
+    <string name="need_full_screen_title">需要全屏显示权限</string>
+    <string name="need_full_screen_message">为了能在主播开播时立即弹出闹钟界面，请允许应用发送全屏意图。</string>
+
+    <string name="allow_precise_alarm_title">需要精确闹钟权限</string>
+    <string name="allow_precise_alarm_message">为了确保在设定时间准时唤醒监控，请开启精确闹钟权限。</string>
+
+    <string name="allow_ensure_no_miss_title">确保闹钟不漏报</string>
+    <string name="allow_ensure_no_miss_message">需要手动开启【自启动】权限，才能在手机重启后自动恢复监控。请在跳转后的页面找到【自启动】或【权限管理】进行设置。</string>
+
+    <string name="nav_room">房间</string>
+    <string name="nav_alarm">闹钟</string>
+    <string name="nav_setting">设置</string>
+    <string name="nav_links">相关链接</string>
+
+    <string name="btn_add">添加</string>
+    <string name="btn_confirm">确认</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_save">保存</string>
+
+    <string name="btn_edit">编辑</string>
+    <string name="btn_delete">删除</string>
+    <string name="btn_enable">开启</string>
+    <string name="btn_disable">关闭</string>
+
+    <string name="btn_acknowledged">我知道了</string>
+    <string name="btn_setting">设置</string>
+    <string name="btn_exit">退出</string>
+    <string name="btn_close">关闭</string>
+
+    <string name="label_rotation">旋转</string>
+    <string name="label_expand">展开</string>
+
+    <string name="label_language">语言</string>
+    <string name="follow_system">跟随系统</string>
+    <string name="label_night_mode">夜间模式</string>
+    <string name="enable_night_mode">开启夜间模式</string>
+    <string name="disable_night_mode">关闭夜间模式</string>
+    <string name="label_data_sync_frequency">数据同步频率</string>
+    <string name="label_live_detection_interval">直播间检测间隔: %1$s秒</string>
+    <string name="live_detection_interval_description">间隔越短，开播提醒越快，但耗电量会增加 (推荐30秒)。</string>
+    <string name="label_streamer_info_sync_interval">主播信息同步间隔: %1$s秒</string>
+    <string name="streamer_info_sync_interval_description">同步头像、名字、粉丝数和获赞数 (推荐60秒)。</string>
+    <string name="label_global_volume">全局音量</string>
+    <string name="global_volume_description">当单个闹钟的音量设为“全局音量”(0) 时，将使用此为默认音量</string>
+    <string name="label_personalized_background">个性化背景</string>
+    <string name="personalized_background_description">共提供 %1$s 个背景，请选择一张图片作为背景。</string>
+    <string name="default_background">默认</string>
+    <string name="label_random_background">随机切换背景</string>
+    <string name="random_background_description">每次启动应用时在已下载的背景中随机展示</string>
+    <string name="label_network_proxy">网络代理</string>
+    <string name="label_modify_proxy">修改代理</string>
+    <string name="modify_proxy_description">用于加速壁纸列表和图片的下载。\n如果图片加载失败，请尝试更换。</string>
+    <string name="example_proxy">例如 %1$s</string>
+    <string name="recommend_nodes">推荐节点：</string>
+    <string name="label_node">节点%1$s</string>
+    <string name="label_about_and_disclaimer">关于与免责声明</string>
+    <string name="label_developer">开发者：伊卡-折原</string>
+    <string name="label_version">版本：%1$s</string>
+
+    <string name="legal_info_title">法律信息</string>
+
+    <string name="label_eula">用户协议与免责声明</string>
+    <string name="label_privacy_policy">隐私政策</string>
+    <string name="label_open_source_licences">开源许可</string>
+    <string name="label_special_thanks">特别感谢</string>
+    <string name="label_about_developer">关于开发者</string>
+    <string name="developer_for_love">开发者：伊卡-折原\n\n源于对折原露露的爱。</string>
+
+    <string name="status_enabled">已开启</string>
+    <string name="status_disabled">已关闭</string>
+
+    <string name="no_streamers_hint">还没有添加主包，点 + 号添加</string>
+    <string name="btn_add_room">添加房间</string>
+
+    <string name="status_live">直播中</string>
+    <string name="status_offline">未开播</string>
+    <string name="unknown_user">未知用户</string>
+    <string name="cover_desc">封面图</string>
+    <string name="delete_desc">删除房间</string>
+    <string name="pin_desc">置顶房间</string>
+    <string name="lock_desc">上锁房间</string>
+
+    <string name="do_not_delete_desc">不可删除</string>
+    <string name="ruru_always_pinned">露露必须永远置顶！</string>
+    <string name="can_not_delete_ruru">这是露露，不能删哦！</string>
+
+    <string name="room_locked">房间已锁定</string>
+    <string name="room_unlock">房间已解锁</string>
+
+    <string name="add_streamer_title">添加主包</string>
+    <string name="edit_streamer_title">编辑主包</string>
+    <string name="label_room_id">输入房间号</string>
+    <string name="label_ringtone">闹钟铃声：</string>
+    <string name="label_vibrate_only">仅震动 (不播放铃声)</string>
+    <string name="toast_hidden_ringtone">隐藏铃声已解锁！</string>
+    <string name="ringtone_default">默认 (随时间变化/含隐藏铃声)</string>
+    <string name="ringtone_customize_selected">自定义…</string>
+    <string name="ringtone_customize">自定义…</string>
+
+    <string name="no_alarms_hint">还没有设置闹钟，点击 + 号添加</string>
+    <string name="btn_add_schedule">添加行程</string>
+
+    <string name="add_alarm_title">添加闹钟</string>
+    <string name="edit_alarm_title">编辑闹钟</string>
+    <string name="label_alarm_name">闹钟名称</string>
+    <string name="link_streamer">关联主包</string>
+    <string name="select_streamer_placeholder">请选择主包</string>
+    <string name="no_streamer_available">请先添加主包</string>
+    <string name="label_volume">音量: %1$s</string>
+    <string name="label_active_time_range">有效时间</string>
+    <string name="label_start_time">开始时间</string>
+    <string name="label_end_time">结束时间</string>
+    <string name="label_repeat_days">每星期重复</string>
+    <string name="label_keywords">关键字 (选填)</string>
+
+    <string name="alarm_once">一次性</string>
+    <string name="alarm_monday">一</string>
+    <string name="alarm_tuesday">二</string>
+    <string name="alarm_wednesday">三</string>
+    <string name="alarm_thursday">四</string>
+    <string name="alarm_friday">五</string>
+    <string name="alarm_saturday">六</string>
+    <string name="alarm_sunday">七</string>
+
+    <string name="label_now_live">主包开播啦！</string>
+    <string name="label_room_cover">主包房间封面</string>
+    <string name="label_alarm_rang">⏰ 闹钟响了！</string>
+
+    <string name="dialog_delete_title">确认删除？</string>
+    <string name="dialog_delete_message">确定要删除 %1$s 吗？</string>
+
+    <string name="notify_go_live">%1$s 开播了！</string>
+    <string name="notify_many_go_live">%1$s 等 %2$s 人开播了！</string>
+    <string name="notify_great_now_live">好消息！有 %1$s 位主播开播了！</string>
+    <string name="notify_offline">%1$s 下播了</string>
+    <string name="notify_offline_message">本次直播已结束</string>
+
+    <string name="notify_channel_name">闹钟提醒</string>
+    <string name="notify_channel_description">当主包开播时弹出全屏闹钟</string>
+
+    <string name="notify_monitoring">%1$s运行中</string>
+    <string name="notify_monitoring_message">正在后台查询直播间状态…</string>
+
+    <string name="notify_watch_stream">查看直播</string>
+    <string name="notify_close_alarm">关闭闹钟</string>
+
+    <string name="notify_room_update">房间状态更新</string>
+
+    <string name="notify_service_resumption">服务复活提醒</string>
+    <string name="notify_service_resumption_message">当系统强制杀死后台监控服务时发送此通知</string>
+
+    <string name="notify_service_suspended">监控服务已暂停</string>
+    <string name="notify_service_suspended_message">系统清理了后台服务，点击此处恢复监控</string>
+
+    <string name="about_ruru_title">关于折原露露</string>
+    <string name="about_ruru_description">查看露露酱的简介。</string>
+    <string name="ruru_space_title">折原露露的B站空间</string>
+    <string name="ruru_space_description">查看露露酱的查看动态和投稿。</string>
+    <string name="ruru_workbench_title">折原露露工作台</string>
+    <string name="ruru_workbench_description">露露酱的工作台，可以查询舰礼快递单号，充电资源，素材相关等。</string>
+    <string name="ruru_live_title">折原露露的直播间（22389206）</string>
+    <string name="ruru_live_description">进入露露酱的直播间。</string>
+    <string name="ruru_taobao_title">长颈鹿的森林小屋</string>
+    <string name="ruru_taobao_description">露露酱把直播间的快乐与心动打包，伪装成周边的样子寄给你。</string>
+    <string name="ruru_qq_title">折原露露的禁言通知群</string>
+    <string name="ruru_qq_description">第一时间捕捉露露酱的信号。欢迎入住，一起调频。</string>
+    <string name="ruru_qq_yinyue_title">折原露露的QQ音乐主页</string>
+    <string name="ruru_qq_yinyue_description">这里是露露酱的音乐小屋。 愿你在露露酱的歌声里，能做一个温柔的长梦。</string>
+    <string name="ruru_netease_cloud_title">折原露露的网易云音乐主页</string>
+    <string name="ruru_netease_cloud_description">希望露露酱的声音，能恰好接住你的每一次情绪下落。感谢聆听。</string>
+    <string name="ruru_weibo_title">折原露露的微博</string>
+    <string name="ruru_weibo_description">比起光鲜亮丽的主播，更想让你认识这个爱吐槽的真实的露露酱。营业随缘，分享日常为主。</string>
+    <string name="ruru_tiktok_title">折原露露的抖音</string>
+    <string name="ruru_tiktok_description">虽然发得少，但每一个视频都是精挑细选的（确信）。</string>
+
+</resources>
