@@ -28,7 +28,7 @@
 
 ## 📥 下载与安装 | Download
 
-请前往 [Releases](https://github.com/ikaorihara/RuKnot/releases) 页面下载最新版本的 APK。
+请前往 [Releases](https://github.com/ikaorihara-source/Ru-Knot/releases) 页面下载最新版本的 APK。
 
 > **注意**：首次安装后，请务必在设置中授予 **“自启动”** 和 **“后台无限制”** 权限，以确保监控服务不被系统查杀。
 
