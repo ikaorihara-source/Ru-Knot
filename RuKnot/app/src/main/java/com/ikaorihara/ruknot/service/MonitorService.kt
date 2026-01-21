@@ -60,6 +60,12 @@ class MonitorService : Service() {
     private var audioManager: AudioManager? = null
     private var originalVolume: Int = -1 // 用于记录用户原来的音量，闹钟结束后恢复
 
+    // 新增：全局静态变量，用于记录当前响铃状态
+    companion object {
+        var isRinging: Boolean = false
+        var currentAlarmList: ArrayList<AlarmItem> = arrayListOf()
+    }
+
     override fun onCreate() {
         super.onCreate()
         // 这里获取你的 Repository 实例 (根据你用的 Koin/Hilt 或者手动单例调整)
@@ -309,6 +315,10 @@ class MonitorService : Service() {
             compareByDescending<AlarmItem> { it.isPinned }.thenBy { it.customOrder }
         )
 
+        // 更新全局状态
+        isRinging = true
+        currentAlarmList = ArrayList(sortedItems)
+
         // 取出排在第一位的，用它的铃声和音量
         val topItem = sortedItems.firstOrNull() ?: return
 
@@ -353,7 +363,11 @@ class MonitorService : Service() {
 
         // 构建 Intent：把整个列表传过去
         val fullScreenIntent = Intent(this, AlarmActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_NO_USER_ACTION or
+                    Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
 
             // 传整个列表
             putExtra("ALARM_LIST", ArrayList(sortedItems))
@@ -406,7 +420,7 @@ class MonitorService : Service() {
 
         // 加载头像作为 LargeIcon
         val coverRequest = ImageRequest.Builder(context)
-            .data(topItem.coverUrl.ifEmpty { R.drawable.ic_notification })
+            .data(topItem.coverUrl.ifEmpty { R.drawable.ic_alarm })
             .error(R.drawable.ic_notification)
             .size(256, 256) // 强制限制图片大小，防止 OOM
             .precision(coil.size.Precision.EXACT)
@@ -443,6 +457,17 @@ class MonitorService : Service() {
 
         // 发送通知
         notificationManager.notify(2001, notification)
+
+        // 直接启动 Activity
+        try {
+            // 让 App 在前台时，或者在允许后台弹窗的旧手机上，直接跳出闹钟页面
+            startActivity(fullScreenIntent)
+            Log.d("MonitorService", "已尝试强制启动 AlarmActivity 霸屏")
+        } catch (e: Exception) {
+            // 在 Android 10+ (Q) 如果 App 处于后台且没有“悬浮窗”权限，这行可能会被系统拦截
+            // 但没关系，被拦截了还有上面的 Notification 顶着
+            Log.e("MonitorService", "强制启动 Activity 失败 (可能是系统限制): ${e.message}")
+        }
     }
 
     // 强制播放音频（无视静音）
@@ -548,6 +573,10 @@ class MonitorService : Service() {
 
     // 停止播放的方法
     private fun stopAlarmSound() {
+        // 重置全局状态
+        isRinging = false
+        currentAlarmList.clear()
+
         try {
             if (mediaPlayer?.isPlaying == true) {
                 mediaPlayer?.stop()

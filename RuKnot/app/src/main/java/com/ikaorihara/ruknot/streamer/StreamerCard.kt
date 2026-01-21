@@ -174,8 +174,7 @@ fun StreamerCard(
                     Icon(
                         Icons.Default.Person,
                         null,
-                        modifier = Modifier.size(12.dp),
-                        tint = Color.Gray
+                        modifier = Modifier.size(12.dp)
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
@@ -189,8 +188,7 @@ fun StreamerCard(
                     Icon(
                         Icons.Default.ThumbUp,
                         null,
-                        modifier = Modifier.size(12.dp),
-                        tint = Color.Gray
+                        modifier = Modifier.size(12.dp)
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(

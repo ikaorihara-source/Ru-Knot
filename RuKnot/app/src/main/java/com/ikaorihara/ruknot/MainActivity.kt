@@ -61,6 +61,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ikaorihara.ruknot.alarm.AlarmActivity
 import com.ikaorihara.ruknot.alarm.AlarmListScreen
 import com.ikaorihara.ruknot.data.AppDatabase
 import com.ikaorihara.ruknot.data.AppThemeMode
@@ -543,6 +544,30 @@ class MainActivity : AppCompatActivity() {
     private fun finalStartService() {
         val intent = Intent(this, MonitorService::class.java)
         startForegroundService(intent)
+    }
+
+    // 生命周期检查
+    override fun onResume() {
+        super.onResume()
+
+        // 核心逻辑：如果正在响铃，用户点图标进来不应该看主页，而是应该看闹钟页
+        if (MonitorService.isRinging && MonitorService.currentAlarmList.isNotEmpty()) {
+
+            // 准备跳转
+            val intent = Intent(this, AlarmActivity::class.java).apply {
+                // 加上 Flag 避免重复创建
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+                // 把数据传过去，否则 AlarmActivity 打开是空的
+                putExtra("ALARM_LIST", MonitorService.currentAlarmList)
+            }
+            startActivity(intent)
+
+            // 可选：如果希望用户按“返回”键不要回到主页，而是直接退出，可以把 MainActivity 关掉
+            // 但通常保留在后台也没事。这里建议不 finish，体验更流畅。
+            // finish()
+            return
+        }
     }
 }
 
