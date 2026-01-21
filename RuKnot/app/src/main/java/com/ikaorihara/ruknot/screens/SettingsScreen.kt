@@ -1,5 +1,6 @@
 package com.ikaorihara.ruknot.screens
 
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -23,19 +24,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.BrightnessMedium
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DownloadForOffline
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -62,9 +57,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -114,7 +109,7 @@ fun SettingsScreen(
         // APP 语言设置
         ExpandableSection(
             title = stringResource(R.string.label_language),
-            icon = Icons.Default.Language,
+            icon = R.drawable.ic_language,
             initiallyExpanded = false
         ) {
             LanguageSettingCard()
@@ -123,7 +118,7 @@ fun SettingsScreen(
         // 夜间模式设置
         ExpandableSection(
             title = stringResource(R.string.label_night_mode),
-            icon = Icons.Default.BrightnessMedium,
+            icon = R.drawable.ic_night,
             initiallyExpanded = false
         ) {
             ThemeSettingCard(
@@ -135,7 +130,7 @@ fun SettingsScreen(
         // 数据更新频率设置
         ExpandableSection(
             title = stringResource(R.string.label_data_sync_frequency),
-            icon = Icons.Default.Sync,
+            icon = R.drawable.ic_sync,
             initiallyExpanded = false
         ) {
             PollingIntervalCard(
@@ -161,7 +156,7 @@ fun SettingsScreen(
         // 全局音量设置
         ExpandableSection(
             title = stringResource(R.string.label_global_volume),
-            icon = Icons.AutoMirrored.Filled.VolumeUp,
+            icon = R.drawable.ic_music,
             initiallyExpanded = false
         ) {
             GlobalVolumeCard(
@@ -173,7 +168,7 @@ fun SettingsScreen(
         // 背景选择卡片
         ExpandableSection(
             title = stringResource(R.string.label_personalized_background),
-            icon = Icons.Default.Image,
+            icon = R.drawable.ic_background,
             initiallyExpanded = false
         ) {
             PersonalizedBackgroundCard(
@@ -186,7 +181,8 @@ fun SettingsScreen(
         // ==========================================
         ExpandableSection(
             title = stringResource(R.string.label_network_proxy),
-            icon = Icons.Default.Public // 需要导入 Icons.Default.Public
+            icon = R.drawable.ic_network,
+            initiallyExpanded = false
         ) {
             NetworkProxyCard(
                 viewModel = viewModel
@@ -196,11 +192,12 @@ fun SettingsScreen(
         // 关于与免责声明 (放在最下面)
         ExpandableSection(
             title = stringResource(R.string.label_about_and_disclaimer),
-            icon = Icons.Default.Info,
+            icon = R.drawable.ic_info,
             initiallyExpanded = false
         ) {
             AboutCard(
                 appVersion = appVersion,
+                onExportLog = { viewModel.exportCrashLog(context) },
                 onNavigateToLegal = onNavigateToLegal
             )
         }
@@ -216,7 +213,7 @@ fun SettingsScreen(
 @Composable
 fun ExpandableSection(
     title: String,
-    icon: ImageVector,
+    @DrawableRes icon: Int,
     initiallyExpanded: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -242,9 +239,14 @@ fun ExpandableSection(
                     .padding(16.dp)
             ) {
                 Icon(
-                    icon,
+                    painter = painterResource(id = icon),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
+
+                    // 图片保持原色（不被选中态染色
+                    tint = Color.Unspecified,
+
+                    // 图片太大或太小，可以调整大小
+                    modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
@@ -456,7 +458,16 @@ fun GlobalVolumeCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null)
+            Icon(
+                painter = painterResource(R.drawable.ic_music),
+                contentDescription = null,
+
+                // 图片保持原色（不被选中态染色
+                tint = if (volume.toInt() == 0) Color.Gray else Color.Unspecified,
+
+                // 图片太大或太小，可以调整大小
+                modifier = Modifier.size(24.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = stringResource(R.string.label_global_volume),
@@ -800,6 +811,7 @@ fun NetworkProxyCard(
 @Composable
 fun AboutCard(
     appVersion: String,
+    onExportLog: () -> Unit,
     onNavigateToLegal: () -> Unit
 ) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
@@ -815,6 +827,22 @@ fun AboutCard(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // 按钮：导出崩溃日志按钮
+        OutlinedButton(
+            onClick = onExportLog,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.BugReport, // 用个虫子图标
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.label_export_logs))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp)) // 两个按钮之间的间距
 
         // 按钮：阅读完整协议
         OutlinedButton(

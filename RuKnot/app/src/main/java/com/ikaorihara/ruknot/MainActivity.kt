@@ -76,6 +76,7 @@ import com.ikaorihara.ruknot.streamer.StreamerListScreen
 import com.ikaorihara.ruknot.ui.AppBackground
 import com.ikaorihara.ruknot.ui.BottomNavItem
 import com.ikaorihara.ruknot.ui.theme.RuKnotTheme
+import com.ikaorihara.ruknot.utils.CrashHandler
 import com.ikaorihara.ruknot.utils.ignoreSSLCheck
 import com.ikaorihara.ruknot.viewmodel.MainViewModel
 import com.ikaorihara.ruknot.viewmodel.MainViewModelFactory
@@ -118,6 +119,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 核心：初始化崩溃日志捕获
+        // 这样一旦有未捕获的异常，就会自动写入文件
+        CrashHandler.init(this)
 
         // 防篡改核心逻辑
         // 只在 Release 模式下检查 (Debug 模式放行)
@@ -627,7 +632,7 @@ fun MainScreen(viewModel: MainViewModel) {
     )
 
     Scaffold(
-        // ★★★ 核心修改：把脚手架设为透明，否则会挡住背景图 ★★★
+        // 把脚手架设为透明，否则会挡住背景图
         containerColor = Color.Transparent,
 
         bottomBar = {
@@ -637,7 +642,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 val currentRoute = navBackStackEntry?.destination?.route
 
                 items.forEach { item ->
-                    // ★★★ 自定义选中逻辑 ★★★
+                    // 自定义选中逻辑
                     val isSelected = when (item) {
                         BottomNavItem.Links -> {
                             // 如果是 Links 按钮：当前是 links 页 OR 当前是 webview 页，都算选中
@@ -657,7 +662,6 @@ fun MainScreen(viewModel: MainViewModel) {
                     NavigationBarItem(
                         icon = {
                             Icon(
-//                                item.icon,
                                 painter = painterResource(id = item.icon),
                                 contentDescription = stringResource(item.titleResId),
 

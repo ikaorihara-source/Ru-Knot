@@ -74,7 +74,7 @@
     <string name="label_about_and_disclaimer">关于与免责声明</string>
     <string name="label_developer">开发者：伊卡-折原</string>
     <string name="label_version">版本：%1$s</string>
-
+    <string name="label_export_logs">导出崩溃日志</string>
     <string name="legal_info_title">法律信息</string>
 
     <string name="label_eula">用户协议与免责声明</string>

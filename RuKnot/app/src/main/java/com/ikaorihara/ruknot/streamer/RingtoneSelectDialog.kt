@@ -80,7 +80,7 @@ fun RingtoneSelectionList(
             name = stringResource(R.string.ringtone_default),
             isSelected = safeCurrentUri == RingtoneUtils.DEFAULT_RINGTONE_URI,
             enabled = enabled,
-            onClick = { if (enabled)onRingtoneSelected(RingtoneUtils.DEFAULT_RINGTONE_URI) }
+            onClick = { if (enabled) onRingtoneSelected(RingtoneUtils.DEFAULT_RINGTONE_URI) }
         )
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -103,10 +103,11 @@ fun RingtoneSelectionList(
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
         // 自定义选项
-        val isCustomSelected = safeCurrentUri != RingtoneUtils.DEFAULT_RINGTONE_URI &&safeCurrentUri.isNotEmpty() &&
-                visibleRingtones.none {
-                    RingtoneUtils.getUriFromRaw(context, it.resId).toString() == safeCurrentUri
-                }
+        val isCustomSelected =
+            safeCurrentUri != RingtoneUtils.DEFAULT_RINGTONE_URI && safeCurrentUri.isNotEmpty() &&
+                    visibleRingtones.none {
+                        RingtoneUtils.getUriFromRaw(context, it.resId).toString() == safeCurrentUri
+                    }
 
         RingtoneItem(
             name = if (isCustomSelected) stringResource(R.string.ringtone_customize_selected) else stringResource(

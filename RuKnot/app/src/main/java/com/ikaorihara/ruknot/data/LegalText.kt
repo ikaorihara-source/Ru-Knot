@@ -251,14 +251,11 @@ private const val SPECIAL_THANKS_CN = """
 
 2. 协助与反馈
 感谢以下“露刻制作组”成员在开发过程中提供的建议，测试与帮助：
-- 波波波波羊
+- 波波波波羊 (美术组)
 - Kon秋山澪
 - miao逝
 - m姓管理员
 - 高师傅
-- wjr
-- 逸帆🍫
-- 913灬
 - 以及所有参与内测的群友们
 
 3. 技术支持
@@ -283,14 +280,11 @@ Your shine is the motivation behind this app.
 
 2. Beta Testers & Contributors
 Thanks to the "Ru-Knot Team" who provided feedback, support and help:
-- 波波波波羊
+- 波波波波羊 (Art Materials)
 - Kon秋山澪
 - miao逝
 - m姓管理员
 - 高师傅
-- wjr
-- 逸帆🍫
-- 913灬
 - And all beta testers
 
 3. Technical Support

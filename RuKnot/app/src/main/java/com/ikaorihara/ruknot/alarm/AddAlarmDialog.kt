@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material3.AlertDialog
@@ -47,7 +46,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -263,9 +264,14 @@ fun AddAlarmDialog(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.AutoMirrored.Filled.VolumeUp,
+                        painter = painterResource(R.drawable.ic_music),
                         contentDescription = null,
-                        tint = if (volume.toInt() == 0) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+
+                        // 图片保持原色（不被选中态染色
+                        tint = if (volume.toInt() == 0) Color.Unspecified else MaterialTheme.colorScheme.primary,
+
+                        // 图片太大或太小，可以调整大小
+                        modifier = Modifier.size(24.dp)
                     )
 
                     Slider(

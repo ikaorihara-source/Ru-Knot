@@ -18,6 +18,7 @@ import com.ikaorihara.ruknot.data.repository.AlarmRepository
 import com.ikaorihara.ruknot.network.RetrofitClient
 import com.ikaorihara.ruknot.network.UserCardData
 import com.ikaorihara.ruknot.streamer.StreamerRoom
+import com.ikaorihara.ruknot.utils.CrashHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -574,6 +575,15 @@ class MainViewModel(
     fun deleteAlarm(rule: AlarmRule) {
         viewModelScope.launch {
             repository.deleteRule(rule)
+        }
+    }
+
+    fun exportCrashLog(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // 切回主线程显示 Toast
+            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                CrashHandler.exportLatestLog(context)
+            }
         }
     }
 }
