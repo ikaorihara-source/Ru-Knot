@@ -20,6 +20,10 @@ class AlarmRepository(
         return streamerDAO.getAllStreamersFlow()
     }
 
+    suspend fun getAllRulesSync(): List<AlarmRule> {
+        return alarmDAO.getAllRulesList()
+    }
+
     // 插入新主播 (AddStreamerDialog 用)
     suspend fun insertStreamer(room: StreamerRoom) {
         streamerDAO.insertStreamer(room)

@@ -71,18 +71,31 @@
     <string name="example_proxy">例如 %1$s</string>
     <string name="recommend_nodes">推荐节点：</string>
     <string name="label_node">节点%1$s</string>
+    <string name="label_data_management">数据管理</string>
+    <string name="label_local_backup">本地备份</string>
+    <string name="local_backup_description">将房间，隐藏铃声解锁状态和闹钟规则导出到本地文件。</string>
+    <string name="btn_backup_data">备份数据</string>
+    <string name="btn_restore_data">恢复数据</string>
     <string name="label_about_and_disclaimer">关于与免责声明</string>
     <string name="label_developer">开发者：伊卡-折原</string>
     <string name="label_version">版本：%1$s</string>
-    <string name="label_export_logs">导出崩溃日志</string>
-    <string name="legal_info_title">法律信息</string>
+    <string name="btn_export_logs">导出崩溃日志</string>
+    <string name="btn_info_title">法律信息</string>
 
+    <string name="legal_info_title">法律信息</string>
     <string name="label_eula">用户协议与免责声明</string>
     <string name="label_privacy_policy">隐私政策</string>
     <string name="label_open_source_licences">开源许可</string>
     <string name="label_special_thanks">特别感谢</string>
     <string name="label_about_developer">关于开发者</string>
     <string name="developer_for_love">开发者：伊卡-折原\n\n源于对折原露露的爱。</string>
+
+    <string name="toast_backup_permission_required">需要存储权限才能备份 (Android 9及以下)</string>
+    <string name="toast_backup_successful">备份成功！已保存到下载目录</string>
+    <string name="toast_backup_failed">备份失败：%1$s</string>
+    <string name="toast_unrecognized_file">无法识别的文件！请确认这是 .rkn 备份文件</string>
+    <string name="toast_recovery_successful">数据恢复成功！请重启 App 生效</string>
+    <string name="toast_import_failed">导入失败，文件可能已损坏</string>
 
     <string name="status_enabled">已开启</string>
     <string name="status_disabled">已关闭</string>

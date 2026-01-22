@@ -1,5 +1,10 @@
 package com.ikaorihara.ruknot.screens
 
+import android.os.Build
+import android.provider.OpenableColumns
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
@@ -26,6 +31,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DownloadForOffline
@@ -176,9 +183,7 @@ fun SettingsScreen(
             )
         }
 
-        // ==========================================
         // 网络设置 (修改代理)
-        // ==========================================
         ExpandableSection(
             title = stringResource(R.string.label_network_proxy),
             icon = R.drawable.ic_network,
@@ -186,6 +191,88 @@ fun SettingsScreen(
         ) {
             NetworkProxyCard(
                 viewModel = viewModel
+            )
+        }
+
+        // 添加权限请求的 Launcher
+        val permissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                viewModel.backupData(context)
+            } else {
+                Toast.makeText(
+                    context,
+                    R.string.toast_backup_permission_required,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        // 数据备份与恢复
+        // 定义文件选择器
+        val importLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            uri?.let { selectedUri ->
+                // 文件名后缀校验逻辑
+                var isValidFile = false
+                val contentResolver = context.contentResolver
+
+                // 查询文件名
+                contentResolver.query(selectedUri, null, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (nameIndex != -1) {
+                            val fileName = cursor.getString(nameIndex)
+                            // 检查是否以 .rkn 结尾 (忽略大小写)
+                            if (fileName.endsWith(".rkn", ignoreCase = true)) {
+                                isValidFile = true
+                            }
+                        }
+                    }
+                }
+
+                if (isValidFile) {
+                    // 用户选了文件后，调用 ViewModel 恢复
+                    viewModel.restoreData(context, selectedUri)
+                } else {
+                    Toast.makeText(context, R.string.toast_unrecognized_file, Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+
+        ExpandableSection(
+            title = stringResource(R.string.label_data_management),
+            icon = R.drawable.ic_sync,
+            initiallyExpanded = false
+        ) {
+            DataBackupCard(
+                onBackup = {
+                    // 判断版本：如果是 Android 10 (Q) 以上，直接备份
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        viewModel.backupData(context)
+                    } else {
+                        // 如果是 Android 9 以下，先检查权限
+                        // 需要 ContextCompact 或 ContextCompat
+                        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                        if (hasPermission) {
+                            viewModel.backupData(context)
+                        } else {
+                            // 没权限，弹窗申请
+                            permissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        }
+                    }
+                },
+                onRestore = {
+                    // 打开文件选择器，尝试只显示二进制文件和未知类型文件
+                    importLauncher.launch(arrayOf("application/octet-stream", "application/*"))
+                }
             )
         }
 
@@ -806,6 +893,60 @@ fun NetworkProxyCard(
 }
 
 // ==========================================
+// 数据备份卡片
+// ==========================================
+@Composable
+fun DataBackupCard(
+    onBackup: () -> Unit,
+    onRestore: () -> Unit
+) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(
+            text = stringResource(R.string.label_local_backup),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(R.string.local_backup_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 按钮：备份
+        OutlinedButton(
+            onClick = onBackup,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.CloudUpload,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.btn_backup_data))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 按钮：恢复
+        OutlinedButton(
+            onClick = onRestore,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.CloudDownload,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.btn_restore_data))
+        }
+    }
+}
+
+// ==========================================
 // 背景选择卡片
 // ==========================================
 @Composable
@@ -839,7 +980,7 @@ fun AboutCard(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.label_export_logs))
+            Text(stringResource(R.string.btn_export_logs))
         }
 
         Spacer(modifier = Modifier.height(8.dp)) // 两个按钮之间的间距
@@ -855,7 +996,7 @@ fun AboutCard(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.legal_info_title))
+            Text(stringResource(R.string.btn_info_title))
         }
     }
 }

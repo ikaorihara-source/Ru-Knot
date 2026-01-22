@@ -3,8 +3,11 @@ package com.ikaorihara.ruknot.viewmodel
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.net.toUri
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -18,7 +21,9 @@ import com.ikaorihara.ruknot.data.repository.AlarmRepository
 import com.ikaorihara.ruknot.network.RetrofitClient
 import com.ikaorihara.ruknot.network.UserCardData
 import com.ikaorihara.ruknot.streamer.StreamerRoom
+import com.ikaorihara.ruknot.utils.AppSettings
 import com.ikaorihara.ruknot.utils.CrashHandler
+import com.ikaorihara.ruknot.utils.DataBackupManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,6 +33,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
@@ -355,6 +361,76 @@ class MainViewModel(
     fun updateGithubProxyUrl(newUrl: String) {
         viewModelScope.launch {
             settingsDataStore.saveGithubProxyUrl(newUrl)
+        }
+    }
+
+    /**
+     * 备份数据到本地文件 (.rkn)
+     */
+    fun backupData(context: Context) {
+        viewModelScope.launch {
+            // 收集当前的设置
+
+            // 语言
+            val currentLocales = AppCompatDelegate.getApplicationLocales()
+            val languageTag = if (currentLocales.isEmpty) "" else currentLocales.toLanguageTags()
+
+            // 从 DataStore 获取当前值 (使用 first() 获取快照)
+            val roomInterval = settingsDataStore.roomUpdateInterval.first()
+            val userInterval = settingsDataStore.userUpdateInterval.first()
+            val volume = settingsDataStore.globalVolume.first()
+            val proxy = settingsDataStore.githubProxyUrl.first()
+
+            // 从 ThemeStorage 获取当前主题
+            val themeName = themeMode.value.name
+
+            val settings = AppSettings(
+                languageTag = languageTag,
+                themeModeName = themeName,
+                roomUpdateInterval = roomInterval,
+                userUpdateInterval = userInterval,
+                globalVolume = volume,
+                proxyUrl = proxy
+            )
+
+            // 调用 Manager 进行导出
+            DataBackupManager.exportData(context, repository, settings)
+        }
+    }
+
+    /**
+     * 从本地文件恢复数据
+     */
+    fun restoreData(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            DataBackupManager.importData(context, uri, repository) { restored ->
+                // 回调：这里执行设置的恢复逻辑
+
+                // 恢复语言
+                val locales = if (restored.languageTag.isEmpty()) {
+                    LocaleListCompat.getEmptyLocaleList()
+                } else {
+                    LocaleListCompat.forLanguageTags(restored.languageTag)
+                }
+                // 切回主线程设置语言
+                withContext(Dispatchers.Main) {
+                    AppCompatDelegate.setApplicationLocales(locales)
+                }
+
+                // 恢复主题
+                try {
+                    val mode = AppThemeMode.valueOf(restored.themeModeName)
+                    setTheme(mode) // 调用 MainViewModel 已有的 setTheme
+                } catch (e: Exception) {
+                    // 忽略枚举不匹配的情况
+                }
+
+                // 恢复 DataStore 中的数据
+                settingsDataStore.saveRoomUpdateInterval(restored.roomUpdateInterval)
+                settingsDataStore.saveUserUpdateInterval(restored.userUpdateInterval)
+                settingsDataStore.setGlobalVolume(restored.globalVolume)
+                settingsDataStore.saveGithubProxyUrl(restored.proxyUrl)
+            }
         }
     }
 

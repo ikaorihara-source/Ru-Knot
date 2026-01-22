@@ -71,18 +71,31 @@
     <string name="example_proxy">Example %1$s</string>
     <string name="recommend_nodes">Recommend Nodes: </string>
     <string name="label_node">Node %1$s</string>
+    <string name="label_data_management">Data Management</string>
+    <string name="label_local_backup">Local backup</string>
+    <string name="local_backup_description">Export rooms, hidden ringtone unlock status, and alarm rules to a local file.</string>
+    <string name="btn_backup_data">Backup data</string>
+    <string name="btn_restore_data">Restore data</string>
     <string name="label_about_and_disclaimer">About and Disclaimer</string>
     <string name="label_developer">Developer: Ika-Orihara</string>
     <string name="label_version">Version: %1$s</string>
-    <string name="label_export_logs">Export crash logs</string>
-    <string name="legal_info_title">Legal information</string>
+    <string name="btn_export_logs">Export crash logs</string>
+    <string name="btn_info_title">Legal information</string>
 
+    <string name="legal_info_title">Legal Information</string>
     <string name="label_eula">EULA</string>
     <string name="label_privacy_policy">Privacy Policy</string>
     <string name="label_open_source_licences">Open Source Licences</string>
     <string name="label_special_thanks">Special Thanks</string>
     <string name="label_about_developer">About Developer</string>
     <string name="developer_for_love">Developer: Ika-Orihara\n\nPowered by Love for Orihara RuRu.</string>
+
+    <string name="toast_backup_permission_required">Storage permission is required to back up (Android 9 and below)</string>
+    <string name="toast_backup_successful">Backup successful! Saved to the Downloads directory</string>
+    <string name="toast_backup_failed">Backup failed: %1$s</string>
+    <string name="toast_unrecognized_file">Unrecognized file! Please verify that this is an .rkn backup file</string>
+    <string name="toast_recovery_successful">Data recovery successful! Please restart the app for changes to take effect</string>
+    <string name="toast_import_failed">Import failed. The file may be corrupted</string>
 
     <string name="status_enabled">Enabled</string>
     <string name="status_disabled">Disabled</string>
