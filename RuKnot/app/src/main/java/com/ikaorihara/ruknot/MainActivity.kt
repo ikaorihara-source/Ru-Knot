@@ -30,7 +30,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -38,6 +40,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -68,6 +72,7 @@ import com.ikaorihara.ruknot.data.AppThemeMode
 import com.ikaorihara.ruknot.data.getEulaText
 import com.ikaorihara.ruknot.data.getPrivacyText
 import com.ikaorihara.ruknot.data.repository.AlarmRepository
+import com.ikaorihara.ruknot.notification.NotificationHistoryScreen
 import com.ikaorihara.ruknot.screens.LegalMenuScreen
 import com.ikaorihara.ruknot.screens.SettingsScreen
 import com.ikaorihara.ruknot.screens.WebLinksScreen
@@ -90,7 +95,8 @@ class MainActivity : AppCompatActivity() {
     // 获取我们刚才写的 ViewModel (大脑)
     private val viewModel: MainViewModel by viewModels {
         val database = AppDatabase.getDatabase(applicationContext)
-        val repository = AlarmRepository(database.StreamerDAO(), database.AlarmDAO())
+        val repository =
+            AlarmRepository(database.StreamerDAO(), database.AlarmDAO(), database.NotificationDao())
 
         // 把 application 也传进去
         MainViewModelFactory(application, repository)
@@ -175,7 +181,7 @@ class MainActivity : AppCompatActivity() {
                     // 显示启动页 (Splash)
                     // 传入背景图路径，保持启动页背景和主页一致（如果需要的话，或者用纯色）
                     // 这里为了简单，我们让 Splash 也是透明背景叠在 AppBackground 上
-                    AppBackground(bgPath = bgPath) {
+                    AppBackground(bgPath = bgPath, isDark = useDarkTheme) {
                         // 注意：这里调用我们在 SplashScreen.kt 写好的组件
                         // 记得导包：import com.ikaorihara.ruknot.screens.SplashScreen
                         com.ikaorihara.ruknot.screens.SplashScreen(
@@ -197,7 +203,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         // 使用背景容器包裹整个 App
-                        AppBackground(bgPath = bgPath) {
+                        AppBackground(bgPath = bgPath, isDark = useDarkTheme) {
                             // 注意：Surface 的颜色必须设为 Transparent，否则会盖住背景图！
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
@@ -208,7 +214,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else {
                         // 这里用 AppBackground 垫底，为了让弹窗后面不至于全黑，好看一点
-                        AppBackground(bgPath = bgPath) {
+                        AppBackground(bgPath = bgPath, isDark = useDarkTheme) {
                             // 显示 EULA 确认对话框
                             EulaConsentDialog(
                                 onAccept = {
@@ -644,8 +650,13 @@ fun EulaConsentDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
+    LaunchedEffect(Unit) {
+        viewModel.checkAppUpdate() // 自动检查
+    }
+
     val navController = rememberNavController()
 
     // 定义底部按钮列表
@@ -656,9 +667,45 @@ fun MainScreen(viewModel: MainViewModel) {
         BottomNavItem.Settings
     )
 
+    // 获取当前路由
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Scaffold(
         // 把脚手架设为透明，否则会挡住背景图
         containerColor = Color.Transparent,
+
+        topBar = {
+            // 只在主页的 4 个 Tab 显示顶部栏，如果是子页面（比如消息中心或内置网页）就隐藏
+            val isMainTab = currentRoute in items.map { it.route }
+
+            if (isMainTab) {
+                TopAppBar(
+                    title = {
+                        Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
+                    },
+                    actions = {
+                        // 小铃铛按钮
+                        IconButton(onClick = { navController.navigate("notification_history") }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_notification_info),
+                                contentDescription = stringResource(R.string.nav_notifications),
+
+                                // 图片保持原色（不被选中态染色
+                                tint = Color.Unspecified,
+
+                                // 图片太大或太小，可以调整大小
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent, // 保持透明，不遮挡壁纸
+                        scrolledContainerColor = Color.Transparent
+                    )
+                )
+            }
+        },
 
         bottomBar = {
             NavigationBar {
@@ -700,6 +747,12 @@ fun MainScreen(viewModel: MainViewModel) {
                         label = { Text(stringResource(item.titleResId)) },
                         selected = isSelected,
                         onClick = {
+                            // 如果当前正停留在消息中心，切换 Tab 时先把它 pop 掉
+                            // 这样原 Tab 保存状态时就不会包含消息中心，切回来时就是干净的根主页
+                            if (currentRoute == "notification_history") {
+                                navController.popBackStack()
+                            }
+
                             // 如果当前在看网页，点了相关链接，回到列表
                             if (item == BottomNavItem.Links && currentRoute?.startsWith("webview") == true) {
                                 navController.popBackStack(BottomNavItem.Links.route, false)
@@ -777,6 +830,15 @@ fun MainScreen(viewModel: MainViewModel) {
 
                     WebViewScreen(
                         url = decodedUrl,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
+                // 注册消息中心页面路由
+                composable("notification_history") {
+                    // 请注意确保导入了下面的新建页面
+                    NotificationHistoryScreen(
+                        viewModel = viewModel,
                         onBack = { navController.popBackStack() }
                     )
                 }

@@ -1,5 +1,15 @@
 package com.ikaorihara.ruknot.screens
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.os.PowerManager
+import android.provider.OpenableColumns
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
@@ -26,11 +36,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -38,6 +53,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -45,7 +61,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +81,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -97,7 +119,132 @@ fun SettingsScreen(
     // 观察频率设置
     val roomInterval by dataStore.roomUpdateInterval.collectAsState(initial = 30L)
     val userInterval by dataStore.userUpdateInterval.collectAsState(initial = 60L)
+    val dynamicInterval by dataStore.dynamicUpdateInterval.collectAsState(initial = 300L)
     val scope = rememberCoroutineScope()
+
+    // 应用内更新弹窗
+    val updateInfo = viewModel.updateInfoState
+    val isDownloading = viewModel.isDownloading
+    val downloadProgress = viewModel.downloadProgress
+
+    if (updateInfo != null) {
+        AlertDialog(
+            onDismissRequest = {
+                // 点击外部关闭 (下载中禁止关闭)
+                if (!isDownloading) viewModel.updateInfoState = null
+            },
+            title = {
+                Text(
+                    stringResource(
+                        R.string.update_dialog_title,
+                        updateInfo.versionName
+                    )
+                )
+            }, // 建议添加字符串资源: "发现新版本: %s"
+            text = {
+                Column {
+                    Text(
+                        stringResource(R.string.update_dialog_content_header),
+                        fontWeight = FontWeight.Bold
+                    ) // "更新内容："
+                    Spacer(Modifier.height(4.dp))
+                    Text(updateInfo.changeLog, style = MaterialTheme.typography.bodySmall)
+
+                    if (isDownloading) {
+                        Spacer(Modifier.height(16.dp))
+
+                        // 显示进度条 (传入 progress 参数)
+                        // progress 必须是 0.0 到 1.0 之间
+                        LinearProgressIndicator(
+                            progress = { downloadProgress },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        // 显示百分比文字
+                        // 格式化为整数百分比，例如 "正在下载中... 45%"
+                        val percentage = (downloadProgress * 100).toInt()
+                        Text(
+                            text = stringResource(
+                                R.string.update_dialog_downloading,
+                                percentage
+                            ), // 建议放入 strings.xml
+                            modifier = Modifier.padding(top = 4.dp),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                if (!isDownloading) {
+                    TextButton(onClick = {
+                        // 核心调用：执行更新
+                        viewModel.performUpdate(context)
+                    }) {
+                        Text(stringResource(R.string.btn_update_in_app)) // "立即更新"
+                    }
+                }
+            },
+            dismissButton = {
+                if (isDownloading) {
+                    TextButton(
+                        onClick = {
+                            viewModel.cancelUpdate() // 调用取消
+                        }
+                    ) {
+                        Text(
+                            stringResource(R.string.btn_cancel),
+                            color = MaterialTheme.colorScheme.error
+                        ) // 建议用红色显示
+                    }
+                } else {
+                    // 到夸克更新按钮
+                    TextButton(
+                        onClick = {
+                            try {
+                                val uri = "https://pan.quark.cn/s/712f0d7dbae6?pwd=fQRW".toUri()
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Toast.makeText(
+                                    context,
+                                    R.string.toast_cant_open_browser,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.btn_update_in_quark))
+                    }
+
+                    // 到百度更新按钮
+                    TextButton(
+                        onClick = {
+                            try {
+                                val uri =
+                                    "https://pan.baidu.com/s/1N3yA9bkiCtYueVZEamvpEw?pwd=msj8".toUri()
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Toast.makeText(
+                                    context,
+                                    R.string.toast_cant_open_browser,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.btn_update_in_baidu))
+                    }
+
+                    TextButton(onClick = { viewModel.updateInfoState = null }) {
+                        Text(stringResource(R.string.btn_update_later)) // "暂不更新"
+                    }
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -136,6 +283,7 @@ fun SettingsScreen(
             PollingIntervalCard(
                 roomInterval = roomInterval,
                 userInterval = userInterval,
+                dynamicInterval = dynamicInterval,
                 onRoomIntervalChange = { value ->
                     scope.launch {
                         dataStore.saveRoomUpdateInterval(
@@ -149,7 +297,25 @@ fun SettingsScreen(
                             value
                         )
                     }
+                },
+                onDynamicIntervalChange = { value ->
+                    scope.launch {
+                        dataStore.saveDynamicUpdateInterval(
+                            value
+                        )
+                    }
                 }
+            )
+        }
+
+        // B站登录设置
+        ExpandableSection(
+            title = stringResource(R.string.label_login_token),
+            icon = R.drawable.ic_sync,
+            initiallyExpanded = false
+        ) {
+            LoginTokenCard(
+                viewModel = viewModel
             )
         }
 
@@ -176,16 +342,105 @@ fun SettingsScreen(
             )
         }
 
-        // ==========================================
-        // 网络设置 (修改代理)
-        // ==========================================
+//        // 网络设置 (修改代理)
+//        ExpandableSection(
+//            title = stringResource(R.string.label_network_proxy),
+//            icon = R.drawable.ic_network,
+//            initiallyExpanded = false
+//        ) {
+//            NetworkProxyCard(
+//                viewModel = viewModel
+//            )
+//        }
+
+        // 后台保活设置
         ExpandableSection(
-            title = stringResource(R.string.label_network_proxy),
+            title = stringResource(R.string.label_battery_optimization),
+            icon = R.drawable.ic_battery_vertical, // 建议找一个电池相关的图标
+            initiallyExpanded = false
+        ) {
+            BatteryOptimizationCard()
+        }
+
+        // 添加权限请求的 Launcher
+        val permissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                viewModel.backupData(context)
+            } else {
+                Toast.makeText(
+                    context,
+                    R.string.toast_backup_permission_required,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        // 数据备份与恢复
+        // 定义文件选择器
+        val importLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            uri?.let { selectedUri ->
+                // 文件名后缀校验逻辑
+                var isValidFile = false
+                val contentResolver = context.contentResolver
+
+                // 查询文件名
+                contentResolver.query(selectedUri, null, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (nameIndex != -1) {
+                            val fileName = cursor.getString(nameIndex)
+                            // 检查是否以 .rkn 结尾 (忽略大小写)
+                            if (fileName.endsWith(".rkn", ignoreCase = true)) {
+                                isValidFile = true
+                            }
+                        }
+                    }
+                }
+
+                if (isValidFile) {
+                    // 用户选了文件后，调用 ViewModel 恢复
+                    viewModel.restoreData(context, selectedUri)
+                } else {
+                    Toast.makeText(context, R.string.toast_unrecognized_file, Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+
+        ExpandableSection(
+            title = stringResource(R.string.label_data_management),
             icon = R.drawable.ic_network,
             initiallyExpanded = false
         ) {
-            NetworkProxyCard(
-                viewModel = viewModel
+            DataBackupCard(
+                onBackup = {
+                    // 判断版本：如果是 Android 10 (Q) 以上，直接备份
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        viewModel.backupData(context)
+                    } else {
+                        // 如果是 Android 9 以下，先检查权限
+                        // 需要 ContextCompact 或 ContextCompat
+                        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                        if (hasPermission) {
+                            viewModel.backupData(context)
+                        } else {
+                            // 没权限，弹窗申请
+                            permissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        }
+                    }
+                },
+                onRestore = {
+                    // 打开文件选择器，尝试只显示二进制文件和未知类型文件
+                    importLauncher.launch(arrayOf("application/octet-stream", "application/*"))
+                }
             )
         }
 
@@ -197,6 +452,7 @@ fun SettingsScreen(
         ) {
             AboutCard(
                 appVersion = appVersion,
+                onCheckAppUpdate = { viewModel.checkAppUpdate(context = context, isManual = true) },
                 onExportLog = { viewModel.exportCrashLog(context) },
                 onNavigateToLegal = onNavigateToLegal
             )
@@ -208,7 +464,7 @@ fun SettingsScreen(
 }
 
 // ==========================================
-// ★★★ 通用组件：可展开的卡片 ★★★
+// 通用组件：可展开的卡片
 // ==========================================
 @Composable
 fun ExpandableSection(
@@ -391,14 +647,16 @@ fun ThemeSettingCard(
 }
 
 // ==========================================
-// 频率设置内容
+// 频率设置卡片
 // ==========================================
 @Composable
 fun PollingIntervalCard(
     roomInterval: Long,
     userInterval: Long,
+    dynamicInterval: Long,
     onRoomIntervalChange: (Long) -> Unit,
-    onUserIntervalChange: (Long) -> Unit
+    onUserIntervalChange: (Long) -> Unit,
+    onDynamicIntervalChange: (Long) -> Unit
 ) {
     Column {
         // --- 房间更新 ---
@@ -442,6 +700,95 @@ fun PollingIntervalCard(
             valueRange = 30f..600f,
             steps = 18 // (600-30)/30 - 1
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- 动态更新 ---
+        Text(
+            stringResource(R.string.label_dynamic_info_sync_interval, dynamicInterval),
+            style = MaterialTheme.typography.titleSmall
+        )
+        Text(
+            stringResource(R.string.dynamic_info_sync_interval_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+        Slider(
+            value = dynamicInterval.toFloat(),
+            onValueChange = { newValue ->
+                val stepped = (newValue / 60).roundToLong() * 60
+                onDynamicIntervalChange(stepped.coerceIn(60, 1800))
+            },
+            valueRange = 60f..1800f,
+            steps = 28, // (1800-60)/60 - 1
+            enabled = false
+        )
+    }
+}
+
+// ==========================================
+// 登入设置内容
+// ==========================================
+@Composable
+fun LoginTokenCard(
+    viewModel: MainViewModel
+) {
+    val context = LocalContext.current
+    val cookie by viewModel.currentCookie.collectAsState()
+    var tempSess by remember(cookie) { mutableStateOf(cookie) }
+
+    Column {
+        Text(
+            text = stringResource(R.string.login_token_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = tempSess,
+            onValueChange = { tempSess = it },
+            label = { Text("Cookie") },
+            placeholder = { Text(stringResource(R.string.holder_paste_here)) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            maxLines = 5
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 将单按钮改为 Row 布局包容两个按钮
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End, // 靠右对齐
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 测试按钮
+            OutlinedButton(
+                onClick = {
+                    viewModel.testCookie(tempSess, context)
+                }
+            ) {
+                Text(stringResource(R.string.btn_test))
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // 保存按钮
+            OutlinedButton(
+                onClick = {
+                    viewModel.updateBiliCookie(tempSess)
+                    Toast.makeText(
+                        context,
+                        R.string.toast_saved,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            ) {
+                Text(stringResource(R.string.btn_save))
+            }
+        }
     }
 }
 
@@ -463,7 +810,7 @@ fun GlobalVolumeCard(
                 contentDescription = null,
 
                 // 图片保持原色（不被选中态染色
-                tint = if (volume.toInt() == 0) Color.Gray else Color.Unspecified,
+                tint = if (volume == 0) Color.Gray else Color.Unspecified,
 
                 // 图片太大或太小，可以调整大小
                 modifier = Modifier.size(24.dp)
@@ -510,6 +857,11 @@ fun PersonalizedBackgroundCard(
     val downloadingMap by viewModel.downloadingStates.collectAsState()
     val currentPath by viewModel.currentBackgroundPath.collectAsState()
     val isRandomBg by viewModel.isRandomBg.collectAsState()
+
+    val baseUrl =
+        "https://orihararurubutton.blob.core.windows.net/orihararurubuttoncontainer/"
+    val backgroundsUrl =
+        "${baseUrl}backgrounds/"
 
     Column {
         // ★★★ 随机背景开关行 ★★★
@@ -601,11 +953,11 @@ fun PersonalizedBackgroundCard(
                 }
             }
 
-            var proxy = viewModel.currentProxyUrl.value
-            // ★★★ 健壮性修复：如果用户没填斜杠，自动补上 ★★★
-            if (proxy.isNotEmpty() && !proxy.endsWith("/")) {
-                proxy += "/"
-            }
+//            var proxy = viewModel.currentProxyUrl.value
+//            // 健壮性修复：如果用户没填斜杠，自动补上
+//            if (proxy.isNotEmpty() && !proxy.endsWith("/")) {
+//                proxy += "/"
+//            }
 
             // === 在线列表 (从 GitHub JSON 获取) ===
             items(onlineList) { item ->
@@ -658,7 +1010,7 @@ fun PersonalizedBackgroundCard(
                     // 显示封面 (自动用镜像链接)
                     AsyncImage(
                         model = ImageRequest.Builder(context)
-                            .data("${proxy}${item.thumbUrl}") // 核心：直接用 RemoteBackground 里的链接
+                            .data("${backgroundsUrl}${item.thumbUrl}") // 核心：直接用 RemoteBackground 里的链接
                             .size(200, 300) // 限制尺寸，列表不卡顿
                             .crossfade(true)
                             .diskCachePolicy(CachePolicy.ENABLED)
@@ -733,74 +1085,243 @@ fun PersonalizedBackgroundCard(
     }
 }
 
+//// ==========================================
+//// 网络代理卡片
+//// ==========================================
+//@Composable
+//fun NetworkProxyCard(
+//    viewModel: MainViewModel
+//) {
+//    val proxyUrl by viewModel.currentProxyUrl.collectAsState()
+//    var tempUrl by remember(proxyUrl) { mutableStateOf(proxyUrl) }
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text(
+//            text = stringResource(R.string.label_modify_proxy),
+//            style = MaterialTheme.typography.titleSmall,
+//            fontWeight = FontWeight.Bold
+//        )
+//        Text(
+//            text = stringResource(R.string.modify_proxy_description),
+//            style = MaterialTheme.typography.bodySmall,
+//            color = MaterialTheme.colorScheme.outline
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        OutlinedTextField(
+//            value = tempUrl,
+//            onValueChange = { tempUrl = it },
+//            label = { Text(stringResource(R.string.example_proxy, "https://v6.gh-proxy.org/")) },
+//            modifier = Modifier.fillMaxWidth(),
+//            singleLine = true
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // 推荐按钮流式布局 (或者简单的 Row)
+//        Text(stringResource(R.string.recommend_nodes), style = MaterialTheme.typography.bodySmall)
+//        LazyRow(
+//            horizontalArrangement = Arrangement.spacedBy(8.dp),
+//            modifier = Modifier.padding(top = 4.dp)
+//        ) {
+//            val nodes = listOf(
+//                "https://v6.gh-proxy.org/",
+//                "https://gh-proxy.com/",
+//                "https://gh-proxy.org/",
+//                "https://cdn.ghproxy.net/",
+//                "https://edgeone.ghproxy.net/",
+//                "https://hk.ghproxy.net/",
+//                "https://ghproxy.net/"
+//            )
+//            items(nodes) { node ->
+//                androidx.compose.material3.AssistChip(
+//                    onClick = {
+//                        tempUrl = node
+//                        viewModel.updateGithubProxyUrl(node)
+//                    },
+//                    label = { Text(stringResource(R.string.label_node, nodes.indexOf(node) + 1)) }
+//                )
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // 保存按钮
+//        OutlinedButton(
+//            onClick = { viewModel.updateGithubProxyUrl(tempUrl) },
+//            modifier = Modifier.align(Alignment.End)
+//        ) {
+//            Text(stringResource(R.string.btn_save))
+//        }
+//    }
+//}
+
 // ==========================================
-// 网络代理卡片
+// 电池优化设置卡片 (保活关键)
 // ==========================================
+@SuppressLint("BatteryLife")
 @Composable
-fun NetworkProxyCard(
-    viewModel: MainViewModel
-) {
-    val proxyUrl by viewModel.currentProxyUrl.collectAsState()
-    var tempUrl by remember(proxyUrl) { mutableStateOf(proxyUrl) }
+fun BatteryOptimizationCard() {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val packageName = context.packageName
+
+    // 获取 PowerManager
+    val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as PowerManager }
+
+    // 状态：是否已经在白名单中
+    var isIgnoringBatteryOptimizations by remember {
+        mutableStateOf(powerManager.isIgnoringBatteryOptimizations(packageName))
+    }
+
+    // 监听生命周期：当用户从系统设置页返回 App (ON_RESUME) 时，自动刷新状态
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                isIgnoringBatteryOptimizations =
+                    powerManager.isIgnoringBatteryOptimizations(packageName)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
-            text = stringResource(R.string.label_modify_proxy),
+            text = stringResource(R.string.label_prevent_kill),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = stringResource(R.string.modify_proxy_description),
+            text = stringResource(R.string.battery_optimization_description),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
-            value = tempUrl,
-            onValueChange = { tempUrl = it },
-            label = { Text(stringResource(R.string.example_proxy, "https://v6.gh-proxy.org/")) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 推荐按钮流式布局 (或者简单的 Row)
-        Text(stringResource(R.string.recommend_nodes), style = MaterialTheme.typography.bodySmall)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(top = 4.dp)
-        ) {
-            val nodes = listOf(
-                "https://v6.gh-proxy.org/",
-                "https://gh-proxy.com/",
-                "https://gh-proxy.org/",
-                "https://cdn.ghproxy.net/",
-                "https://edgeone.ghproxy.net/",
-                "https://hk.ghproxy.net/",
-                "https://ghproxy.net/"
-            )
-            items(nodes) { node ->
-                androidx.compose.material3.AssistChip(
-                    onClick = {
-                        tempUrl = node
-                        viewModel.updateGithubProxyUrl(node)
-                    },
-                    label = { Text(stringResource(R.string.label_node, nodes.indexOf(node) + 1)) }
+        if (isIgnoringBatteryOptimizations) {
+            // 状态：已开启 (显示为不可点击的绿色或灰色按钮，表明状态正常)
+            OutlinedButton(
+                onClick = {
+                    // 已经是白名单了，通常不需要操作，但可以允许用户去查看
+                    try {
+                        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                // 也可以设为 false 禁用，这里设为 true 允许用户进去检查
+                enabled = true
+            ) {
+                Icon(
+                    Icons.Default.Check, //painterResource(R.drawable.ic_check_circle), // 确保你有 ic_check_circle 或者用 Icons.Default.Check
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.btn_whitelist_enabled),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
+        } else {
+            // 状态：未开启 (申请按钮)
+            OutlinedButton(
+                onClick = {
+                    try {
+                        // 尝试 1: 直接弹窗请求白名单 (需要权限)
+                        val intent =
+                            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                data = "package:$packageName".toUri()
+                            }
+                        context.startActivity(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        // 尝试 2: 如果崩溃（部分厂商阉割），则跳转到列表页让用户自己找
+                        try {
+                            val intent =
+                                Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            Toast.makeText(
+                                context,
+                                R.string.toast_battery_optimization_not_supported,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_battery_horizental),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.btn_request_whitelist))
+            }
+        }
+    }
+}
+
+// ==========================================
+// 数据备份卡片
+// ==========================================
+@Composable
+fun DataBackupCard(
+    onBackup: () -> Unit,
+    onRestore: () -> Unit
+) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(
+            text = stringResource(R.string.label_local_backup),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = stringResource(R.string.local_backup_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 按钮：备份
+        OutlinedButton(
+            onClick = onBackup,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.CloudUpload,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.btn_backup_data))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 保存按钮
+        // 按钮：恢复
         OutlinedButton(
-            onClick = { viewModel.updateGithubProxyUrl(tempUrl) },
-            modifier = Modifier.align(Alignment.End)
+            onClick = onRestore,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(stringResource(R.string.btn_save))
+            Icon(
+                Icons.Default.CloudDownload,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.btn_restore_data))
         }
     }
 }
@@ -811,6 +1332,7 @@ fun NetworkProxyCard(
 @Composable
 fun AboutCard(
     appVersion: String,
+    onCheckAppUpdate: () -> Unit,
     onExportLog: () -> Unit,
     onNavigateToLegal: () -> Unit
 ) {
@@ -828,18 +1350,34 @@ fun AboutCard(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // 按钮：检查更新按钮
+        OutlinedButton(
+            onClick = onCheckAppUpdate,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.SystemUpdate,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.btn_check_update))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // 按钮：导出崩溃日志按钮
         OutlinedButton(
             onClick = onExportLog,
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
-                Icons.Default.BugReport, // 用个虫子图标
+                Icons.Default.BugReport,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.label_export_logs))
+            Text(stringResource(R.string.btn_export_logs))
         }
 
         Spacer(modifier = Modifier.height(8.dp)) // 两个按钮之间的间距
@@ -855,7 +1393,7 @@ fun AboutCard(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.legal_info_title))
+            Text(stringResource(R.string.btn_info_title))
         }
     }
 }

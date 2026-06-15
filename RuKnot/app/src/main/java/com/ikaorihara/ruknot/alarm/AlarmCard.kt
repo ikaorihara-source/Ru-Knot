@@ -1,5 +1,7 @@
 package com.ikaorihara.ruknot.alarm
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -32,10 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.ikaorihara.ruknot.R
 import com.ikaorihara.ruknot.streamer.StreamerRoom
@@ -48,6 +52,7 @@ fun AlarmCard(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -95,14 +100,42 @@ fun AlarmCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 左侧：主播头像
+            // 直播间封面
             if (streamer != null) {
                 AsyncImage(
                     model = streamer.coverUrl, // 优先用头像，没有就用封面
                     contentDescription = null,
                     modifier = Modifier
                         .size(60.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clickable {
+                            try {
+                                // 构建 B 站跳转协议
+                                val uri = "bilibili://live/${streamer.roomId}".toUri()
+                                val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                // 如果没装 B 站，跳转网页版
+                                try {
+                                    val webUri =
+                                        "https://live.bilibili.com/${streamer.roomId}".toUri()
+                                    val webIntent = Intent(Intent.ACTION_VIEW, webUri).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    context.startActivity(webIntent)
+                                } catch (_: Exception) {
+                                    // 极少数情况：连浏览器都没有
+                                    Toast.makeText(
+                                        context,
+                                        R.string.toast_unable_open,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        },
                     contentScale = ContentScale.Crop
                 )
             } else {

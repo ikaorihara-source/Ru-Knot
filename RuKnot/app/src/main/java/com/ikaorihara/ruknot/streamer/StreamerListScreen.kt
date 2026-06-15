@@ -166,7 +166,7 @@ fun StreamerListScreen(viewModel: MainViewModel) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                // ★★★ 只有满足条件才应用拖拽手势 ★★★
+                                // 只有满足条件才应用拖拽手势
                                 .then(
                                     if (isDraggable) {
                                         Modifier.longPressDraggableHandle(
@@ -229,10 +229,10 @@ fun StreamerListScreen(viewModel: MainViewModel) {
                 onDismiss = { showDialog = false },
                 onConfirm = { roomId, ringtoneUri, isVibrationOnly ->
                     if (editingStreamer == null) {
-                        // === 新增模式 (editingStreamer is null) ===
+                        // 新增模式 (editingStreamer is null)
                         viewModel.addStreamer(roomId, ringtoneUri, isVibrationOnly)
                     } else {
-                        // === 编辑模式 (editingStreamer is set) ===
+                        // 编辑模式 (editingStreamer is set)
                         // ⚠️ 关键：使用 .copy() 只更新铃声，保留原有的 title, coverUrl, isLive 等数据
                         val updatedRoom = editingStreamer!!.copy(
                             // roomId 不允许改，isEnabled 保持原样

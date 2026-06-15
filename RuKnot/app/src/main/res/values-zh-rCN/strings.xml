@@ -29,11 +29,13 @@
     <string name="nav_alarm">闹钟</string>
     <string name="nav_setting">设置</string>
     <string name="nav_links">相关链接</string>
+    <string name="nav_notifications">通知中心</string>
 
     <string name="btn_add">添加</string>
     <string name="btn_confirm">确认</string>
     <string name="btn_cancel">取消</string>
     <string name="btn_save">保存</string>
+    <string name="btn_test">测试</string>
 
     <string name="btn_edit">编辑</string>
     <string name="btn_delete">删除</string>
@@ -44,6 +46,18 @@
     <string name="btn_setting">设置</string>
     <string name="btn_exit">退出</string>
     <string name="btn_close">关闭</string>
+
+    <string name="btn_back">返回</string>
+    <string name="btn_refresh">刷新</string>
+    <string name="btn_open_browser">在浏览器打开</string>
+
+    <string name="btn_clear_history">清楚历史记录</string>
+    <string name="btn_remove">移除</string>
+    <string name="btn_lock_unlock">锁定 / 解锁</string>
+
+    <string name="title_notifications">通知记录</string>
+
+    <string name="label_no_history">暂无记录</string>
 
     <string name="label_rotation">旋转</string>
     <string name="label_expand">展开</string>
@@ -58,6 +72,11 @@
     <string name="live_detection_interval_description">间隔越短，开播提醒越快，但耗电量会增加 (推荐30秒)。</string>
     <string name="label_streamer_info_sync_interval">主播信息同步间隔: %1$s秒</string>
     <string name="streamer_info_sync_interval_description">同步头像、名字、粉丝数和获赞数 (推荐60秒)。</string>
+    <string name="label_dynamic_info_sync_interval">主播动态检测间隔: %1$s秒</string>
+    <string name="dynamic_info_sync_interval_description">检测动态的间隔，间隔越短，越容易被风控 (推荐300秒)。\n为了防止账号被风控，动态检查频率已暂时固定。</string>
+    <string name="label_login_token">B站登录令牌 (Cookie)</string>
+    <string name="login_token_description">如果要获取动态更新，请填入您自己的Cookie。如果留空，将只推送开播提醒。</string>
+    <string name="holder_paste_here">在此粘贴……</string>
     <string name="label_global_volume">全局音量</string>
     <string name="global_volume_description">当单个闹钟的音量设为“全局音量”(0) 时，将使用此为默认音量</string>
     <string name="label_personalized_background">个性化背景</string>
@@ -65,18 +84,37 @@
     <string name="default_background">默认</string>
     <string name="label_random_background">随机切换背景</string>
     <string name="random_background_description">每次启动应用时在已下载的背景中随机展示</string>
-    <string name="label_network_proxy">网络代理</string>
-    <string name="label_modify_proxy">修改代理</string>
-    <string name="modify_proxy_description">用于加速壁纸列表和图片的下载。\n如果图片加载失败，请尝试更换。</string>
-    <string name="example_proxy">例如 %1$s</string>
-    <string name="recommend_nodes">推荐节点：</string>
-    <string name="label_node">节点%1$s</string>
+    <!--    <string name="label_network_proxy">网络代理</string>-->
+    <!--    <string name="label_modify_proxy">修改代理</string>-->
+    <!--    <string name="modify_proxy_description">用于加速壁纸列表和图片的下载。\n如果图片加载失败，请尝试更换。</string>-->
+    <!--    <string name="example_proxy">例如 %1$s</string>-->
+    <!--    <string name="recommend_nodes">推荐节点：</string>-->
+    <!--    <string name="label_node">节点%1$s</string>-->
+    <string name="label_battery_optimization">后台保活设置 (重要)</string>
+    <string name="label_prevent_kill">避免杀后台</string>
+    <string name="battery_optimization_description">如果长时间不打开 App 导致服务停止，请开启此选项。\n这会将 App 加入电池优化白名单，允许后台运行。</string>
+    <string name="btn_request_whitelist">申请忽略电池优化</string>
+    <string name="btn_whitelist_enabled">已开启后台保活 (白名单)</string>
+    <string name="label_data_management">数据管理</string>
+    <string name="label_local_backup">本地备份</string>
+    <string name="local_backup_description">将房间，隐藏铃声解锁状态和闹钟规则导出到本地文件。</string>
+    <string name="btn_backup_data">备份数据</string>
+    <string name="btn_restore_data">恢复数据</string>
     <string name="label_about_and_disclaimer">关于与免责声明</string>
     <string name="label_developer">开发者：伊卡-折原</string>
     <string name="label_version">版本：%1$s</string>
-    <string name="label_export_logs">导出崩溃日志</string>
-    <string name="legal_info_title">法律信息</string>
+    <string name="btn_check_update">检查应用更新</string>
+    <string name="update_dialog_title">发现新版本: %1$s</string>
+    <string name="update_dialog_content_header">更新内容：</string>
+    <string name="update_dialog_downloading">正在下载中…… %1$s%%</string>
+    <string name="btn_update_in_app">应用内更新</string>
+    <string name="btn_update_in_quark">到夸克更新</string>
+    <string name="btn_update_in_baidu">到百度更新</string>
+    <string name="btn_update_later">暂不更新</string>
+    <string name="btn_export_logs">导出崩溃日志</string>
+    <string name="btn_info_title">法律信息</string>
 
+    <string name="legal_info_title">法律信息</string>
     <string name="label_eula">用户协议与免责声明</string>
     <string name="label_privacy_policy">隐私政策</string>
     <string name="label_open_source_licences">开源许可</string>
@@ -84,11 +122,34 @@
     <string name="label_about_developer">关于开发者</string>
     <string name="developer_for_love">开发者：伊卡-折原\n\n源于对折原露露的爱。</string>
 
+    <string name="toast_saved">已保存！</string>
+
+    <string name="toast_battery_optimization_not_supported">该设备不支持自动跳转，请手动在设置中开启“无限制”</string>
+
+    <string name="toast_backup_permission_required">需要存储权限才能备份 (Android 9及以下)</string>
+    <string name="toast_backup_successful">备份成功！已保存到下载目录</string>
+    <string name="toast_backup_failed">备份失败：%1$s</string>
+    <string name="toast_unrecognized_file">无法识别的文件！请确认这是 .rkn 备份文件</string>
+    <string name="toast_recovery_successful">数据恢复成功！请重启 App 生效</string>
+    <string name="toast_import_failed">导入失败，文件可能已损坏</string>
+
+    <string name="toast_latest_version">当前已是最新版本</string>
+    <string name="toast_allow_unknown_source">请允许安装未知来源应用以进行更新</string>
+    <string name="toast_download_failed">下载失败，请检查网络</string>
+    <string name="toast_cant_open_browser">无法打开浏览器</string>
+
+    <string name="toast_empty_cookie">请先输入 Cookie</string>
+    <string name="toast_test_success">测试成功！Cookie 有效</string>
+    <string name="toast_test_failed">测试失败：无效或已过期 (代码: %1$s)</string>
+    <string name="toast_network_error">网络请求失败，请检查网络</string>
+
     <string name="status_enabled">已开启</string>
     <string name="status_disabled">已关闭</string>
 
     <string name="no_streamers_hint">还没有添加主包，点 + 号添加</string>
     <string name="btn_add_room">添加房间</string>
+
+    <string name="toast_unable_open">无法打开直播间</string>
 
     <string name="status_live">直播中</string>
     <string name="status_offline">未开播</string>
@@ -169,6 +230,11 @@
 
     <string name="notify_service_suspended">监控服务已暂停</string>
     <string name="notify_service_suspended_message">系统清理了后台服务，点击此处恢复监控</string>
+
+    <string name="notify_info_update">动态更新</string>
+
+    <string name="notify_new_info">%1$s有新动态了</string>
+    <string name="notify_new_info_message">当系统强制杀死后台监控服务时发送此通知</string>
 
     <string name="about_ruru_title">关于折原露露</string>
     <string name="about_ruru_description">查看露露酱的简介。</string>

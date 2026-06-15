@@ -10,6 +10,16 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
+// 读取 local.properties 的函数
+fun getLocalProperty(key: String): String {
+    val properties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        properties.load(localPropertiesFile.inputStream())
+    }
+    return properties.getProperty(key) ?: ""
+}
+
 android {
     namespace = "com.ikaorihara.ruknot"
     compileSdk {
@@ -20,22 +30,21 @@ android {
         applicationId = "com.ikaorihara.ruknot"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.0"
+        versionCode = 25
+        versionName = "1.4.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // 读取配置并注入 BuildConfig
         // 读取 SHA1 并注入到代码中
-        val properties = Properties()
-        val localPropsFile = rootProject.file("local.properties")
-        if (localPropsFile.exists()) {
-            properties.load(FileInputStream(localPropsFile))
-        }
-        // 如果没读到（比如别人下载了代码），就给个空字符串，表示不校验
-        val sha1 = properties.getProperty("app.sha1") ?: ""
+        val sha1 = getLocalProperty("app.sha1")
+        // 优先读 local.properties，如果没有（比如别人编译），就给个默认值防止报错
+        val secretKey = getLocalProperty("backup.secret")
 
         // 这行代码会在编译时生成一个 BuildConfig.APP_SHA1 常量
+        // buildConfigField("类型", "变量名", "值")
         buildConfigField("String", "APP_SHA1", "\"$sha1\"")
+        buildConfigField("String", "BACKUP_SECRET", "\"$secretKey\"")
     }
 
     // 定义签名配置 (必须写在 buildTypes 前面)
@@ -132,6 +141,8 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
+    implementation("com.google.code.gson:gson:2.10.1")
+
     // 图片加载 (Coil) - 显示主播头像
     implementation("io.coil-kt:coil-compose:2.7.0")
     // Coil 视频解码器 (用于显示视频文件的缩略图)
@@ -158,6 +169,9 @@ dependencies {
     // Reorderable 拖拽排序库
     implementation("sh.calvin.reorderable:reorderable:2.1.1")
 
-    val work_version = "2.9.0"
-    implementation("androidx.work:work-runtime-ktx:$work_version")
+    val workVersion = "2.9.0"
+    implementation("androidx.work:work-runtime-ktx:$workVersion")
+
+    // 用于解析 B站 WebSocket 的 Brotli 压缩包
+    implementation("org.brotli:dec:0.1.2")
 }

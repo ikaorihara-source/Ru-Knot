@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ikaorihara.ruknot.alarm.AlarmRule
+import com.ikaorihara.ruknot.notification.NotificationRecord
 import com.ikaorihara.ruknot.streamer.StreamerRoom
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,8 +18,8 @@ import kotlinx.coroutines.launch
 // 父类: RoomDatabase (安卓系统的名字)
 // ↓↓↓ 这样写是完美的，不会冲突 ↓↓↓
 @Database(
-    entities = [StreamerRoom::class, AlarmRule::class],
-    version = 3,
+    entities = [StreamerRoom::class, AlarmRule::class, NotificationRecord::class],
+    version = 5,
     exportSchema = true,
 //    autoMigrations = [
 //        AutoMigration(from = 1, to = 2) //, spec = AppDatabase.MyRenameMigration::class
@@ -29,6 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun StreamerDAO(): StreamerDAO
     abstract fun AlarmDAO(): AlarmDAO
+    abstract fun NotificationDao(): NotificationDAO
 
     companion object {
         @Volatile
@@ -37,29 +39,37 @@ abstract class AppDatabase : RoomDatabase() {
         // 定义从版本 2 升级到 3 的手动迁移逻辑
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-//                // 1. 加 is_locked 列
-//                db.execSQL("ALTER TABLE streamer_room_table ADD COLUMN is_locked INTEGER NOT NULL DEFAULT 0")
-//
-//                // 2. 加 custom_order 列
-//                // 默认值设为 0
-//                db.execSQL("ALTER TABLE streamer_room_table ADD COLUMN custom_order INTEGER NOT NULL DEFAULT 0")
-//
-//                // 3. 初始化数据
-//                // 3.1 把露露锁上
-//                db.execSQL("UPDATE streamer_room_table SET is_locked = 1 WHERE room_id = 22389206")
-//
-//                // 3.2 初始化排序
-//                // 我们直接把 room_id 赋值给 custom_order，作为初始顺序
-//                // 这样升级上来时，顺序就是添加的顺序
-//                db.execSQL("UPDATE streamer_room_table SET custom_order = room_id")
-//
-//                // 3.3 强行把露露排第一
-//                // 给她一个负数，确保她永远比 room_id (正数) 小
-//                db.execSQL("UPDATE streamer_room_table SET custom_order = -2147483648 WHERE room_id = 22389206")
-
                 db.execSQL("ALTER TABLE streamer_room_table ADD COLUMN is_vibration_only INTEGER NOT NULL DEFAULT 0")
 
                 db.execSQL("UPDATE streamer_room_table SET is_vibration_only = 0")
+            }
+        }
+
+        // ★ 3. 添加版本 3 升 4 的迁移脚本
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `notification_history` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `title` TEXT NOT NULL, 
+                        `message` TEXT NOT NULL, 
+                        `timestamp` INTEGER NOT NULL, 
+                        `type` TEXT NOT NULL, 
+                        `room_id` INTEGER NOT NULL, 
+                        `user_id` INTEGER NOT NULL, 
+                        `dynamic_id` TEXT, 
+                        `avatar_url` TEXT NOT NULL
+                    )
+                """.trimIndent()
+                )
+            }
+        }
+
+        // ★ 版本 4 升 5 的迁移脚本 (给表加上 is_locked 字段)
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `notification_history` ADD COLUMN `is_locked` INTEGER NOT NULL DEFAULT 0")
             }
         }
 
@@ -70,9 +80,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "blive_alarm_database"
                 )
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .addCallback(AppDatabaseCallback())
-//                .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration()
                     .build()
 
                 INSTANCE = instance

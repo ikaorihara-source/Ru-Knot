@@ -29,11 +29,13 @@
     <string name="nav_alarm">Alarms</string>
     <string name="nav_setting">Setting</string>
     <string name="nav_links">Links</string>
+    <string name="nav_notifications">Notifications</string>
 
     <string name="btn_add">Add</string>
     <string name="btn_confirm">Confirm</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_save">Save</string>
+    <string name="btn_test">Test</string>
 
     <string name="btn_edit">Edit</string>
     <string name="btn_delete">Delete</string>
@@ -44,6 +46,18 @@
     <string name="btn_setting">Setting</string>
     <string name="btn_exit">Exit</string>
     <string name="btn_close">Close</string>
+
+    <string name="btn_back">Back</string>
+    <string name="btn_refresh">Refresh</string>
+    <string name="btn_open_browser">Open in browser</string>
+
+    <string name="title_notifications">Notifications</string>
+
+    <string name="btn_clear_history">Clear history</string>
+    <string name="btn_remove">Remove</string>
+    <string name="btn_lock_unlock">Lock / Unlock</string>
+
+    <string name="label_no_history">No history</string>
 
     <string name="label_rotation">Rotation</string>
     <string name="label_expand">Expand</string>
@@ -58,6 +72,11 @@
     <string name="live_detection_interval_description">The shorter the interval, the faster the broadcast reminder, but battery consumption will increase (recommended: 30 seconds).</string>
     <string name="label_streamer_info_sync_interval">Streamer info sync interval: %1$s seconds</string>
     <string name="streamer_info_sync_interval_description">Synchronize profile pictures, names, follower counts, and likes (recommended 60 seconds).</string>
+    <string name="label_dynamic_info_sync_interval">Dynamic info sync interval: %1$s seconds</string>
+    <string name="dynamic_info_sync_interval_description">The interval for detecting activity; the shorter the interval, the more likely it is to trigger risk controls. (recommended 300 seconds).\nTo prevent accounts from triggering risk controls, the dynamic check frequency has been temporarily fixed.</string>
+    <string name="label_login_token">BLive login token (Cookie)</string>
+    <string name="login_token_description">To receive dynamic updates, please enter your own Cookie. If left blank, only live stream notifications will be pushed.</string>
+    <string name="holder_paste_here">Paste here……</string>
     <string name="label_global_volume">Global volume</string>
     <string name="global_volume_description">When the volume of a single alarm is set to "Global volume" (0), this will be used as the default volume.</string>
     <string name="label_personalized_background">Personalized background</string>
@@ -65,18 +84,37 @@
     <string name="default_background">Default</string>
     <string name="label_random_background">Randomly switch backgrounds</string>
     <string name="random_background_description">Each time the app launches, it randomly displays one of the downloaded backgrounds.</string>
-    <string name="label_network_proxy">Network Proxy</string>
-    <string name="label_modify_proxy">Modify proxy</string>
-    <string name="modify_proxy_description">Accelerates the download of wallpaper lists and images.\nIf an image fails to load, please try a different one.</string>
-    <string name="example_proxy">Example %1$s</string>
-    <string name="recommend_nodes">Recommend Nodes: </string>
-    <string name="label_node">Node %1$s</string>
+    <!--    <string name="label_network_proxy">Network Proxy</string>-->
+    <!--    <string name="label_modify_proxy">Modify proxy</string>-->
+    <!--    <string name="modify_proxy_description">Accelerates the download of wallpaper lists and images.\nIf an image fails to load, please try a different one.</string>-->
+    <!--    <string name="example_proxy">Example %1$s</string>-->
+    <!--    <string name="recommend_nodes">Recommend Nodes: </string>-->
+    <!--    <string name="label_node">Node %1$s</string>-->
+    <string name="label_battery_optimization">Background Keep-Alive (Important)</string>
+    <string name="label_prevent_kill">Prevent App Killing</string>
+    <string name="battery_optimization_description">If the service stops unexpectedly after the app has been closed for a while, please enable this option.\nThis adds the app to the battery optimization whitelist, allowing it to run in the background.</string>
+    <string name="btn_request_whitelist">Ignore Battery Opt.</string>
+    <string name="btn_whitelist_enabled">Keep-Alive Enabled (Whitelisted)</string>
+
+    <string name="label_data_management">Data Management</string>
+    <string name="label_local_backup">Local backup</string>
+    <string name="local_backup_description">Export rooms, hidden ringtone unlock status, and alarm rules to a local file.</string>
+    <string name="btn_backup_data">Backup data</string>
+    <string name="btn_restore_data">Restore data</string>
     <string name="label_about_and_disclaimer">About and Disclaimer</string>
     <string name="label_developer">Developer: Ika-Orihara</string>
     <string name="label_version">Version: %1$s</string>
-    <string name="label_export_logs">Export crash logs</string>
-    <string name="legal_info_title">Legal information</string>
-
+    <string name="btn_check_update">Check app update</string>
+    <string name="update_dialog_title">New version found: %1$s</string>
+    <string name="update_dialog_content_header">Update Details: </string>
+    <string name="update_dialog_downloading">Downloading…… %1$s%%</string>
+    <string name="btn_update_in_app">Update In App</string>
+    <string name="btn_update_in_quark">Update In Quark</string>
+    <string name="btn_update_in_baidu">Update In Baidu</string>
+    <string name="btn_update_later">Update Later</string>
+    <string name="btn_export_logs">Export crash logs</string>
+    <string name="btn_info_title">Legal information</string>
+    <string name="legal_info_title">Legal Information</string>
     <string name="label_eula">EULA</string>
     <string name="label_privacy_policy">Privacy Policy</string>
     <string name="label_open_source_licences">Open Source Licences</string>
@@ -84,11 +122,34 @@
     <string name="label_about_developer">About Developer</string>
     <string name="developer_for_love">Developer: Ika-Orihara\n\nPowered by Love for Orihara RuRu.</string>
 
+    <string name="toast_saved">Saved!</string>
+
+    <string name="toast_battery_optimization_not_supported">Auto-redirect not supported. Please manually set battery usage to "Unrestricted" in Settings.</string>
+
+    <string name="toast_backup_permission_required">Storage permission is required to back up (Android 9 and below)</string>
+    <string name="toast_backup_successful">Backup successful! Saved to the Downloads directory</string>
+    <string name="toast_backup_failed">Backup failed: %1$s</string>
+    <string name="toast_unrecognized_file">Unrecognized file! Please verify that this is an .rkn backup file</string>
+    <string name="toast_recovery_successful">Data recovery successful! Please restart the app for changes to take effect</string>
+    <string name="toast_import_failed">Import failed. The file may be corrupted</string>
+
+    <string name="toast_latest_version">This is the latest version</string>
+    <string name="toast_allow_unknown_source">Please allow installation of apps from unknown sources to proceed with the update</string>
+    <string name="toast_download_failed">Download failed. Please check your network connection</string>
+    <string name="toast_cant_open_browser">Can\'t open the browser</string>
+
+    <string name="toast_empty_cookie">Please enter Cookie first</string>
+    <string name="toast_test_success">Test successful! Cookie is valid</string>
+    <string name="toast_test_failed">Test failed: Invalid or expired (Code: %1$s)</string>
+    <string name="toast_network_error">Network request failed, please check your connection</string>
+
     <string name="status_enabled">Enabled</string>
     <string name="status_disabled">Disabled</string>
 
     <string name="no_streamers_hint">No streamers added yet. Tap + to add</string>
     <string name="btn_add_room">Add Room</string>
+
+    <string name="toast_unable_open">Unable to open the live stream</string>
 
     <string name="status_live">Live</string>
     <string name="status_offline">Offline</string>
@@ -169,6 +230,11 @@
 
     <string name="notify_service_suspended">Monitoring service has been suspended.</string>
     <string name="notify_service_suspended_message">The system has cleared background services. Click here to restore monitoring.</string>
+
+    <string name="notify_info_update">Info Update</string>
+
+    <string name="notify_new_info">%1$s have new information.</string>
+    <string name="notify_new_info_message">The system has cleared background services. Click here to restore monitoring.</string>
 
     <string name="about_ruru_title">About Orihara RuRu</string>
     <string name="about_ruru_description">Get to know RuRu.</string>

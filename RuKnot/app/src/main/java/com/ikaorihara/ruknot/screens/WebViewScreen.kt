@@ -38,10 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
+import com.ikaorihara.ruknot.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
@@ -88,20 +90,29 @@ fun WebViewScreen(
                             if (webView?.canGoBack() == true) webView?.goBack() else onBack()
                         }) {
                             // 如果能后退显示返回箭头，否则显示关闭叉叉 (可选优化，这里统一用箭头)
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.btn_back)
+                            )
                         }
                     },
                     actions = {
                         // 刷新按钮
                         IconButton(onClick = { webView?.reload() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = stringResource(R.string.btn_refresh)
+                            )
                         }
 
                         // 强制关闭按钮 (X)
                         // 无论网页浏览到哪里，点这个直接退出浏览器
                         IconButton(onClick = { onBack() }) {
                             // 需要引入 Icons.Default.Close
-                            Icon(Icons.Default.Close, contentDescription = "Close Browser")
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.btn_close)
+                            )
                         }
 
                         // 外部浏览器打开按钮
@@ -116,7 +127,7 @@ fun WebViewScreen(
                         }) {
                             Icon(
                                 Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = "Open in Browser"
+                                contentDescription = stringResource(R.string.btn_open_browser)
                             )
                         }
                     },

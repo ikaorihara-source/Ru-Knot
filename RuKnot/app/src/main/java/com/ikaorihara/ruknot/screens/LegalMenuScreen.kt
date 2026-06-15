@@ -160,6 +160,9 @@ fun LegalMenuScreen(
     // 通用弹窗：显示选中的内容
     if (selectedItem != null) {
         AlertDialog(
+            modifier = Modifier
+                .padding(bottom = 24.dp)
+                .fillMaxWidth(),
             onDismissRequest = { selectedItem = null },
             title = { Text(selectedItem!!.title) },
             text = {

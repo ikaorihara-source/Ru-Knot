@@ -18,10 +18,12 @@ class SettingsDataStore(private val context: Context) {
     companion object {
         private val KEY_ROOM_UPDATE_INTERVAL = longPreferencesKey("room_update_interval")
         private val KEY_USER_UPDATE_INTERVAL = longPreferencesKey("user_update_interval")
+        private val KEY_DYNAMIC_UPDATE_INTERVAL = longPreferencesKey("dynamic_update_interval")
+        private val KEY_BILI_COOKIE = stringPreferencesKey("bili_cookie")
         private val KEY_GLOBAL_VOLUME = intPreferencesKey("global_volume")
         private val KEY_BACKGROUND_PATH = stringPreferencesKey("app_background_bg_path")
         private val KEY_RANDOM_BACKGROUND = booleanPreferencesKey("is_random_background")
-        private val KEY_GITHUB_PROXY_URL = stringPreferencesKey("github_proxy_url")
+//        private val KEY_GITHUB_PROXY_URL = stringPreferencesKey("github_proxy_url")
     }
 
     // 房间数据更新频率 (默认 30秒)
@@ -38,11 +40,36 @@ class SettingsDataStore(private val context: Context) {
 
     // 保存设置的方法
     suspend fun saveRoomUpdateInterval(seconds: Long) {
-        context.dataStore.edit { it[KEY_ROOM_UPDATE_INTERVAL] = seconds }
+        context.dataStore.edit { preferences ->
+            preferences[KEY_ROOM_UPDATE_INTERVAL] = seconds
+        }
     }
 
     suspend fun saveUserUpdateInterval(seconds: Long) {
-        context.dataStore.edit { it[KEY_USER_UPDATE_INTERVAL] = seconds }
+        context.dataStore.edit { preferences ->
+            preferences[KEY_USER_UPDATE_INTERVAL] = seconds
+        }
+    }
+
+    val dynamicUpdateInterval: Flow<Long> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_DYNAMIC_UPDATE_INTERVAL] ?: 300L
+        }
+
+    suspend fun saveDynamicUpdateInterval(seconds: Long) {
+        context.dataStore.edit { it[KEY_DYNAMIC_UPDATE_INTERVAL] = seconds }
+    }
+
+    val biliCookie: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            // 默认值使用
+            preferences[KEY_BILI_COOKIE] ?: ""
+        }
+
+    suspend fun saveBiliCookie(url: String) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_BILI_COOKIE] = url
+        }
     }
 
     // 读取全局音量 (默认值设为 100)
@@ -85,15 +112,15 @@ class SettingsDataStore(private val context: Context) {
         }
     }
 
-    val githubProxyUrl: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            // 默认值使用
-            preferences[KEY_GITHUB_PROXY_URL] ?: "https://v6.gh-proxy.org/"
-        }
-
-    suspend fun saveGithubProxyUrl(url: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_GITHUB_PROXY_URL] = url
-        }
-    }
+//    val githubProxyUrl: Flow<String> = context.dataStore.data
+//        .map { preferences ->
+//            // 默认值使用
+//            preferences[KEY_GITHUB_PROXY_URL] ?: "https://v6.gh-proxy.org/"
+//        }
+//
+//    suspend fun saveGithubProxyUrl(url: String) {
+//        context.dataStore.edit { preferences ->
+//            preferences[KEY_GITHUB_PROXY_URL] = url
+//        }
+//    }
 }

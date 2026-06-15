@@ -29,6 +29,9 @@
 -keep class com.ikaorihara.ruknot.data.** { *; }
 -keep class com.ikaorihara.ruknot.network.** { *; }
 -keep class com.ikaorihara.ruknot.streamer.** { *; }
+-keep class com.ikaorihara.ruknot.utils.AppSettings { *; }
+-keep class com.ikaorihara.ruknot.utils.BackupData { *; }
+-keep class com.ikaorihara.ruknot.utils.UpdateInfo { *; }
 
 # ========================
 # 第三方库

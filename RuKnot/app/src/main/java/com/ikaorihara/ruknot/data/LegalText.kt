@@ -18,7 +18,7 @@ fun getEulaText(): String {
         try {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
         } catch (e: Exception) {
-            "1.0.0" // 获取失败时的兜底
+            "1.3.0" // 获取失败时的兜底
         }
     }
 
@@ -63,7 +63,7 @@ private fun getEulaCn(version: String) = """
 【露刻 (Ru-Knot) 最终用户许可协议 (EULA)】
 
 版本：$version
-最后更新日期：2026年1月17日
+最后更新日期：2026年2月24日
 
 在使用“露刻 (Ru-Knot)”（以下简称“本应用”或“本软件”）之前，请您（以下简称“用户”）务必仔细阅读并充分理解本《最终用户许可协议与免责声明》（以下简称“本协议”）的所有条款。
 
@@ -87,9 +87,10 @@ private fun getEulaCn(version: String) = """
 (2) 违规后果：如用户违反规定，开发者有权终止服务并配合法律追责。
 
 5. 免责声明 (重要)
-(1) 服务稳定性：因系统设置（如杀后台）、Bilibili 接口变动或网络波动导致的提醒失败、闹钟未响，开发者不承担赔偿责任。
-(2) 风险自担：用户应自行合理安排时间，因过分依赖提醒导致的损失由用户自行承担。
-(3) 网络资源：应用内提供的“个性化背景”功能需连接第三方代码托管平台（如 GitHub）及其镜像节点下载资源，开发者不对第三方服务的稳定性及内容安全性负责。
+(1) 账号与凭证安全：本应用允许用户手动填入 Bilibili 登录凭证 (Cookie) 以获取高级功能。用户需自行妥善保管该凭证，切勿将其截图或发送给他人。因用户自身泄露凭证导致的一切账号安全问题及财产损失，开发者概不负责。
+(2) 服务稳定性：因系统设置（如杀后台）、Bilibili 接口变动或网络波动导致的提醒失败、闹钟未响，开发者不承担赔偿责任。
+(3) 风险自担：用户应自行合理安排时间，因过分依赖提醒导致的损失由用户自行承担。
+(4) 网络资源：应用内提供的“个性化背景”功能需连接第三方数据节点下载资源，开发者不对第三方服务的稳定性及内容安全性负责。
 
 6. 终止
 如果您违反本协议的任何条款，您的使用许可将自动终止。
@@ -112,7 +113,7 @@ private fun getEulaEn(version: String) = """
 【Ru-Knot End User License Agreement (EULA)】
 
 Version: $version
-Last Updated: January 17, 2026
+Last Updated: February 24, 2026
 
 Before using "Ru-Knot" (hereinafter referred to as "the App"), please carefully read and fully understand all terms of this Agreement.
 
@@ -136,9 +137,10 @@ Before using "Ru-Knot" (hereinafter referred to as "the App"), please carefully 
 (2) Consequences: The developer reserves the right to terminate services for users who violate these terms.
 
 5. Limitation of Liability
-(1) Service Stability: The developer assumes NO liability for missed alarms or notification failures caused by system restrictions (e.g., battery optimization), Bilibili API changes, or network instability.
-(2) Risk Assumption: Users assume all risks associated with the use of the App. The developer is not liable for any loss resulting from reliance on the App's notifications.
-(3) Network Resources: The "Personalized Background" feature downloads assets from third-party repositories (e.g., GitHub) and mirror nodes. The developer is not responsible for the stability or safety of these third-party services.
+(1) Account Security: The App allows users to input their Bilibili login token (Cookie) for advanced features. Users are solely responsible for keeping this token safe. The developer is NOT liable for any account compromise or asset loss resulting from users leaking their tokens.
+(2) Service Stability: The developer assumes NO liability for missed alarms or notification failures caused by system restrictions (e.g., battery optimization), Bilibili API changes, or network instability.
+(3) Risk Assumption: Users assume all risks associated with the use of the App. The developer is not liable for any loss resulting from reliance on the App's notifications.
+(4) Network Resources: Features like "Personalized Background" download assets from third-party repositories. The developer is not responsible for the stability or safety of these third-party services.
 
 6. Termination
 This license terminates automatically if you violate any of its terms.
@@ -161,23 +163,25 @@ private const val PRIVACY_CN = """
 【隐私政策 (Privacy Policy)】
 
 1. 数据收集原则
-本应用坚持“不收集”原则。我们不收集您的姓名、身份证号、手机号或任何生物识别信息。
+本应用坚持“绝对不收集”原则。我们绝不收集您的姓名、身份证号、手机号、设备序列号或任何生物识别信息。本应用也没有自己的独立后端服务器用于收集用户画像。
 
-2. Bilibili 账号信息
+2. Bilibili 账号信息与凭证安全 (极重要)
 本应用不需要登录即可使用。内置浏览器 (WebView) 产生的所有登录数据（Cookie/Token）均存储在您设备的本地 WebView 容器中，直接与 Bilibili 官方服务器交互。本应用无法、也不会获取或上传您的账号密码。
+本应用提供“动态提醒”高级功能，需要您手动填入 Bilibili 的免密登录凭证 (Cookie)。
+请您放心：您填入的 Cookie 采用 Android 官方的 DataStore 技术加密存储于您的手机本地沙盒中。该凭证【仅用于】本应用在后台向 Bilibili 官方服务器发起合法的数据查询请求。本应用【绝对不会】收集、窃取或将您的 Cookie 上传至任何第三方服务器。
 
 3. 本地数据存储
-您的设置（如闹钟时间、关注列表、自定义背景图片）仅存储在您的手机本地数据库或文件系统中。卸载应用或清除数据后，这些信息将被永久删除。
+您的所有设置（如闹钟时间、关注列表、自定义背景图片、更新频率等）仅存储在您的手机本地数据库或文件系统中。卸载应用或清除数据后，这些信息将被彻底且永久删除。
 
 4. 权限使用说明
-(1) 网络权限：用于获取公开的直播状态。
-(2) 通知的权限：用于发送开播提醒。
-(3) 闹钟与后台权限：为了确保在锁屏状态下能唤醒提醒，我们需要申请忽略电池优化权限。
+(1) 网络权限：用于向 Bilibili 官方接口请求公开的直播状态和动态更新。
+(2) 通知权限：用于发送开播及动态提醒。
+(3) 闹钟与后台权限：为了确保在锁屏和深度休眠状态下依然能准时唤醒提醒，我们需要申请忽略电池优化的权限。
 
 5. 第三方服务与数据来源
 (1) 直播数据：直接源于 Bilibili 公开接口。
-(2) 背景资源：个性化背景图片/视频资源下载自 GitHub 公共仓库，可能会经过公共公益镜像节点（如 ghproxy.net）进行传输加速。
-(3) 本应用未接入任何第三方数据分析 SDK 或广告 SDK。
+(2) 背景资源：个性化背景图片/视频资源下载自云存储节点。
+(3) 纯净承诺：本应用未接入任何第三方数据分析 SDK (如友盟、Bugly) 或广告 SDK。您的每一次点击都是绝对私密的。
 """
 
 // ------------------------------------------------------------------------
@@ -187,23 +191,25 @@ private const val PRIVACY_EN = """
 【Privacy Policy】
 
 1. Data Collection
-We do NOT collect any Personally Identifiable Information (PII) such as your real name, ID, or phone number.
+We adhere to a strict "Zero Collection" policy. We do NOT collect any Personally Identifiable Information (PII) such as your real name, ID, phone number, or device serial numbers. The App does not have a backend server to track user behavior.
 
 2. Account Credentials
 No login is required to use the App. Login sessions within the built-in browser (WebView) are stored locally on your device and communicate directly with Bilibili servers. The App cannot access or upload your password.
+The App offers an advanced "Dynamic Notification" feature that requires users to manually input their Bilibili login token (Cookie).
+Please rest assured: The Cookie you provide is securely encrypted and stored locally on your device using Android DataStore. This token is STRICTLY used by the App to authenticate requests sent DIRECTLY to Bilibili's official servers. We will NEVER collect, steal, or upload your Cookie to any third-party servers.
 
 3. Local Storage
-User settings (e.g., alarm times, personalized backgrounds) are stored locally on your device. Uninstalling the App will permanently delete this data.
+All your configurations (e.g., alarm settings, streamer lists, personalized backgrounds) are stored locally on your device. Uninstalling the App will permanently delete all such data.
 
 4. Permissions
-(1) Internet: To fetch public stream status and download background assets.
-(2) Notifications: To send stream alerts.
-(3) Alarms & Background: To ensure alerts work when the screen is off, we request battery optimization exemptions.
+(1) Internet: To fetch live status and dynamic updates from Bilibili APIs.
+(2) Notifications: To send stream and dynamic alerts.
+(3) Alarms & Background: To ensure alerts work reliably even when the screen is off and the device is in deep sleep mode, we request battery optimization exemptions.
 
 5. Third-Party Services
-(1) Live Data: Fetched directly from Bilibili's public API.
-(2) Background Assets: Personalized background images/videos are downloaded from public GitHub repositories and may be routed through public mirror proxies (e.g., ghproxy.net) for acceleration.
-(3) Analytics/Ads: The App does not contain any third-party analytics or ad SDKs.
+(1) Live Data: Fetched directly from Bilibili's public APIs.
+(2) Background Assets: Downloaded from cloud storage nodes.
+(3) Clean Commitment: The App does NOT integrate any third-party analytics SDKs (e.g., Google Analytics) or ad networks. Your usage is completely private.
 """
 
 // ------------------------------------------------------------------------

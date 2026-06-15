@@ -1,7 +1,9 @@
 package com.ikaorihara.ruknot.streamer
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -48,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.ikaorihara.ruknot.R
 
@@ -120,6 +123,33 @@ fun StreamerCard(
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable {
+                        try {
+                            // 构建 B 站跳转协议
+                            val uri = "bilibili://live/${room.roomId}".toUri()
+                            val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            // 如果没装 B 站，跳转网页版
+                            try {
+                                val webUri = "https://live.bilibili.com/${room.roomId}".toUri()
+                                val webIntent = Intent(Intent.ACTION_VIEW, webUri).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                context.startActivity(webIntent)
+                            } catch (_: Exception) {
+                                // 极少数情况：连浏览器都没有
+                                Toast.makeText(
+                                    context,
+                                    R.string.toast_unable_open,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
             )
 
             Spacer(modifier = Modifier.width(12.dp))

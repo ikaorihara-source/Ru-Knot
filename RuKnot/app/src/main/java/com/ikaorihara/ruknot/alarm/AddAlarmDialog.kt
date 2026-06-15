@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -141,7 +142,7 @@ fun AddAlarmDialog(
             previewPlayer.reset()
             // 获取当前选中主播的铃声，如果没有则用默认
             val uri = selectedStreamer?.ringtoneUri?.toUri()
-                ?: "android.resource://${context.packageName}/${R.raw.default_alarm}".toUri()
+                ?: "android.resource://${context.packageName}/${R.raw.ruru_moonlight_mirage_02}".toUri()
 
             previewPlayer.setDataSource(context, uri)
             previewPlayer.setAudioAttributes(
@@ -177,7 +178,8 @@ fun AddAlarmDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
         modifier = Modifier
             .padding(24.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .fillMaxHeight(0.85f),
         title = {
             val titleId =
                 if (existingRule == null) R.string.add_alarm_title else R.string.edit_alarm_title

@@ -7,7 +7,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://api.live.bilibili.com"
+    private const val BASE_URL = "https://api.live.bilibili.com/"
+
+    var userCookie: String = ""
 
     // 创建一个监控器 (Interceptor)
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -18,16 +20,27 @@ object RetrofitClient {
     // 伪装拦截器：把自己伪装成浏览器
     private val headerInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
-        val newRequest = originalRequest.newBuilder()
-            // 这一行是关键！告诉B站：我是电脑版的 Edge/Chrome 浏览器，不是机器人
-            .header(
+        val builder = originalRequest.newBuilder()
+
+        // 检查是否已经存在 User-Agent。如果没有，才使用 PC 端伪装
+        if (originalRequest.header("User-Agent") == null) {
+            builder.header(
                 "User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             )
-            // 顺便告诉它我想要 json 格式
-            .header("Accept", "application/json")
-            .build()
-        chain.proceed(newRequest)
+        }
+
+        // 告诉它我想要 json 格式
+        builder.header("Accept", "application/json")
+
+        // 核心：如果有 COOKIE，就带上；没有就不带
+        if (userCookie.isNotEmpty()) {
+//            builder.header("Cookie", "COOKIE=$userCookie;")
+            val cleanCookie = userCookie.replace("\n", "").replace("\r", "").trim()
+            builder.header("Cookie", cleanCookie)
+        }
+
+        chain.proceed(builder.build())
     }
 
     // 创建一个 HttpClient，把监控器装进去

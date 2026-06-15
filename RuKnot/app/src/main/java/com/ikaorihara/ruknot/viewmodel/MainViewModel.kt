@@ -3,12 +3,23 @@ package com.ikaorihara.ruknot.viewmodel
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ikaorihara.ruknot.R
 import com.ikaorihara.ruknot.alarm.AlarmRule
 import com.ikaorihara.ruknot.data.AppThemeMode
 import com.ikaorihara.ruknot.data.RemoteBackground
@@ -17,9 +28,15 @@ import com.ikaorihara.ruknot.data.ThemeStorage
 import com.ikaorihara.ruknot.data.repository.AlarmRepository
 import com.ikaorihara.ruknot.network.RetrofitClient
 import com.ikaorihara.ruknot.network.UserCardData
+import com.ikaorihara.ruknot.notification.NotificationRecord
 import com.ikaorihara.ruknot.streamer.StreamerRoom
+import com.ikaorihara.ruknot.utils.AppSettings
 import com.ikaorihara.ruknot.utils.CrashHandler
+import com.ikaorihara.ruknot.utils.DataBackupManager
+import com.ikaorihara.ruknot.utils.UpdateInfo
+import com.ikaorihara.ruknot.utils.UpdateManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +45,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
@@ -37,6 +55,7 @@ import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.cancellation.CancellationException
 
 // 继承 AndroidViewModel 是为了能拿到 application context 来创建数据库
 class MainViewModel(
@@ -61,6 +80,9 @@ class MainViewModel(
             themeStorage.setThemeMode(mode)
         }
     }
+
+    val currentCookie: StateFlow<String> = settingsDataStore.biliCookie
+        .stateIn(viewModelScope, SharingStarted.Lazily, "")
 
     // 暴露全局音量状态
     val globalVolume: StateFlow<Int> = settingsDataStore.globalVolume
@@ -92,23 +114,146 @@ class MainViewModel(
     val isRandomBg: StateFlow<Boolean> = settingsDataStore.isRandomBackground
         .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    // 暴露当前的代理地址
-    val currentProxyUrl: StateFlow<String> = settingsDataStore.githubProxyUrl
-        .stateIn(viewModelScope, SharingStarted.Lazily, "https://gh-proxy.com/")
+//    // 暴露当前的代理地址
+//    val currentProxyUrl: StateFlow<String> = settingsDataStore.githubProxyUrl
+//        .stateIn(viewModelScope, SharingStarted.Lazily, "https://gh-proxy.com/")
+
+    private val baseUrl =
+        "https://orihararurubutton.blob.core.windows.net/orihararurubuttoncontainer/"
+
+    private val updateUrl =
+        "${baseUrl}app-release/"
+    private val backgroundsUrl =
+        "${baseUrl}backgrounds/"
+
+    // 定义 Update JSON 地址
+    private val updateJsonUrl = "${updateUrl}update.json"
+
+    // 添加状态
+    var updateInfoState by mutableStateOf<UpdateInfo?>(null)
+    var isDownloading by mutableStateOf(false)
+
+    // 下载进度 (0.0f ~ 1.0f)
+    var downloadProgress by mutableFloatStateOf(0f)
+
+    private var downloadJob: Job? = null
+
+    // 标记是否已经自动检查过
+    private var hasAutoChecked = false
+
+    // 检查更新
+    fun checkAppUpdate(context: Context? = null, isManual: Boolean = false) {
+        // 逻辑：如果是自动检查，且之前已经查过了，直接跳过
+        if (!isManual && hasAutoChecked) {
+            return
+        }
+
+        // 如果是自动检查，标记为“已检查”
+        if (!isManual) {
+            hasAutoChecked = true
+        }
+
+        viewModelScope.launch {
+
+            val info = UpdateManager.checkUpdate(updateJsonUrl)
+
+            if (info != null) {
+                // 触发 UI 弹窗
+                updateInfoState = info
+            } else {
+                // 无更新
+                if (isManual && context != null) {
+                    // 只有手动检查时，才提示“已是最新”
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.toast_latest_version),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
+    }
+
+    // 执行更新
+    fun performUpdate(context: Context) {
+        val info = updateInfoState ?: return
+
+        downloadJob = viewModelScope.launch {
+            if (!context.packageManager.canRequestPackageInstalls()) {
+                // 提示用户
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.toast_allow_unknown_source),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                // 引导去设置页
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                intent.data = "package:${context.packageName}".toUri()
+                // 添加这个 flag 确保从设置页返回时能回到你的 App
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+
+                // 暂停更新，直接返回
+                // 用户去开启权限后，需要按返回键回到 App，再次点击“更新”按钮
+                return@launch
+            }
+
+            isDownloading = true
+            downloadProgress = 0f
+
+            try {
+                val file = UpdateManager.downloadApk(context, info.downloadUrl) { progress ->
+                    downloadProgress = progress // 实时更新进度条
+                }
+
+                isDownloading = false
+
+                if (file != null) {
+                    UpdateManager.installApk(context, file)
+                } else {
+                    // 下载失败提示
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.toast_download_failed),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (_: CancellationException) {
+                // 捕获取消异常
+                Log.d("Update", "下载已取消")
+                isDownloading = false
+                downloadProgress = 0f
+                // 这里不需要弹错误提示，因为是用户主动取消的
+            }
+        }
+    }
+
+    // 取消下载的方法
+    fun cancelUpdate() {
+        downloadJob?.cancel() // 停止协程
+        isDownloading = false // 重置状态
+        downloadProgress = 0f
+    }
 
     // --- 拉取 GitHub 列表 ---
     // 下载并解析 JSON
     private fun fetchBackgroundList() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // 换用 ghproxy.net
-                var proxy = currentProxyUrl.value
-                // ★★★ 健壮性修复：如果用户没填斜杠，自动补上 ★★★
-                if (proxy.isNotEmpty() && !proxy.endsWith("/")) {
-                    proxy += "/"
-                }
+//                // 换用 ghproxy.net
+//                var proxy = currentProxyUrl.value
+//                // 健壮性修复：如果用户没填斜杠，自动补上
+//                if (proxy.isNotEmpty() && !proxy.endsWith("/")) {
+//                    proxy += "/"
+//                }
                 val jsonUrl =
-                    "${proxy}https://raw.githubusercontent.com/ikaorihara-source/RuKnot-Assets/main/backgrounds/backgrounds.json"
+//                    "${proxy}https://raw.githubusercontent.com/ikaorihara-source/RuKnot-Assets/main/backgrounds/backgrounds.json"
+                    "${backgroundsUrl}backgrounds.json"
 
                 // 创建一个“不检查证书”的 OkHttpClient (核弹级解决方案)
                 val trustAllCerts = arrayOf<javax.net.ssl.TrustManager>(
@@ -247,12 +392,13 @@ class MainViewModel(
                     .retryOnConnectionFailure(true) // ★★★ 自动重试，解决 EOF 报错
                     .build()
 
-                var proxy = currentProxyUrl.value
-                // ★★★ 健壮性修复：如果用户没填斜杠，自动补上 ★★★
-                if (proxy.isNotEmpty() && !proxy.endsWith("/")) {
-                    proxy += "/"
-                }
-                val downloadUrl = "${proxy}${item.downloadUrl}"
+//                var proxy = currentProxyUrl.value
+//                // ★★★ 健壮性修复：如果用户没填斜杠，自动补上 ★★★
+//                if (proxy.isNotEmpty() && !proxy.endsWith("/")) {
+//                    proxy += "/"
+//                }
+//                val downloadUrl = "${proxy}${item.downloadUrl}"
+                val downloadUrl = "${backgroundsUrl}${item.downloadUrl}"
 
                 // 构建请求
                 val request = Request.Builder()
@@ -351,10 +497,129 @@ class MainViewModel(
         }
     }
 
+//    // 增加修改方法供 UI 调用
+//    fun updateGithubProxyUrl(newUrl: String) {
+//        viewModelScope.launch {
+//            settingsDataStore.saveGithubProxyUrl(newUrl)
+//        }
+//    }
+
     // 增加修改方法供 UI 调用
-    fun updateGithubProxyUrl(newUrl: String) {
+    fun updateBiliCookie(cookie: String) {
+        val cleanCookie = cookie.replace("\n", "").replace("\r", "").trim()
+
         viewModelScope.launch {
-            settingsDataStore.saveGithubProxyUrl(newUrl)
+            settingsDataStore.saveBiliCookie(cleanCookie)
+        }
+    }
+
+    // 测试 COOKIE 是否有效
+    fun testCookie(testToken: String, context: Context) {
+        if (testToken.isBlank()) {
+            Toast.makeText(context, context.getString(R.string.toast_empty_cookie), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // 临时覆盖 RetrofitClient 中的 Token 用于测试
+                val oldToken = RetrofitClient.userCookie
+                RetrofitClient.userCookie = testToken
+
+                // 发起验证请求 (复用了 BiliAppDynamicResponse)
+                val response = RetrofitClient.service.checkLoginStatus()
+
+                // 恢复成原来的 Token (真实的保存由用户点击"保存"按钮决定)
+                RetrofitClient.userCookie = oldToken
+
+                // 判断 code 是否为 0
+                withContext(Dispatchers.Main) {
+                    if (response.code == 0) {
+                        Toast.makeText(context, context.getString(R.string.toast_test_success), Toast.LENGTH_LONG).show()
+                    } else {
+                        // 通常 -101 代表未登录
+                        Toast.makeText(context, context.getString(R.string.toast_test_failed, response.code.toString()), Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (_: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    /**
+     * 备份数据到本地文件 (.rkn)
+     */
+    fun backupData(context: Context) {
+        viewModelScope.launch {
+            // 收集当前的设置
+
+            // 语言
+            val currentLocales = AppCompatDelegate.getApplicationLocales()
+            val languageTag = if (currentLocales.isEmpty) "" else currentLocales.toLanguageTags()
+
+            // 从 DataStore 获取当前值 (使用 first() 获取快照)
+            val roomInterval = settingsDataStore.roomUpdateInterval.first()
+            val userInterval = settingsDataStore.userUpdateInterval.first()
+            val dynamicInterval = settingsDataStore.dynamicUpdateInterval.first() // ★
+            val cookie = settingsDataStore.biliCookie.first()
+            val volume = settingsDataStore.globalVolume.first()
+//            val proxy = settingsDataStore.githubProxyUrl.first()
+
+            // 从 ThemeStorage 获取当前主题
+            val themeName = themeMode.value.name
+
+            val settings = AppSettings(
+                languageTag = languageTag,
+                themeModeName = themeName,
+                roomUpdateInterval = roomInterval,
+                userUpdateInterval = userInterval,
+                dynamicUpdateInterval = dynamicInterval,
+                biliCookie = cookie,
+                globalVolume = volume
+            )
+
+            // 调用 Manager 进行导出
+            DataBackupManager.exportData(context, repository, settings)
+        }
+    }
+
+    /**
+     * 从本地文件恢复数据
+     */
+    fun restoreData(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            DataBackupManager.importData(context, uri, repository) { restored ->
+                // 回调：这里执行设置的恢复逻辑
+
+                // 恢复语言
+                val locales = if (restored.languageTag.isEmpty()) {
+                    LocaleListCompat.getEmptyLocaleList()
+                } else {
+                    LocaleListCompat.forLanguageTags(restored.languageTag)
+                }
+                // 切回主线程设置语言
+                withContext(Dispatchers.Main) {
+                    AppCompatDelegate.setApplicationLocales(locales)
+                }
+
+                // 恢复主题
+                try {
+                    val mode = AppThemeMode.valueOf(restored.themeModeName)
+                    setTheme(mode) // 调用 MainViewModel 已有的 setTheme
+                } catch (_: Exception) {
+                    // 忽略枚举不匹配的情况
+                }
+
+                // 恢复 DataStore 中的数据
+                settingsDataStore.saveRoomUpdateInterval(restored.roomUpdateInterval)
+                settingsDataStore.saveUserUpdateInterval(restored.userUpdateInterval)
+                settingsDataStore.saveDynamicUpdateInterval(restored.dynamicUpdateInterval)
+                settingsDataStore.saveBiliCookie(restored.biliCookie)
+                settingsDataStore.setGlobalVolume(restored.globalVolume)
+            }
         }
     }
 
@@ -408,10 +673,11 @@ class MainViewModel(
         }
 
         viewModelScope.launch {
-            currentProxyUrl.collect { proxy ->
-                Log.d("MainViewModel", "代理地址已加载/更新: $proxy，正在刷新列表...")
-                fetchBackgroundList()
-            }
+//            currentProxyUrl.collect { proxy ->
+//                Log.d("MainViewModel", "代理地址已加载/更新: $proxy，正在刷新列表...")
+//            }
+            Log.d("MainViewModel", "正在刷新列表...")
+            fetchBackgroundList()
         }
     }
 
@@ -499,7 +765,7 @@ class MainViewModel(
             // 关键：告诉安卓系统“我要永久持有这个文件的读取权限”
             getApplication<Application>().contentResolver.takePersistableUriPermission(
                 uri,
-                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
             Log.d("MainViewModel", "铃声权限获取成功: $uriString")
         } catch (e: SecurityException) {
@@ -578,10 +844,32 @@ class MainViewModel(
         }
     }
 
+    val notificationHistory: StateFlow<List<NotificationRecord>> =
+        repository.getAllNotificationsFlow()
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun clearNotificationHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.clearAllNotifications()
+        }
+    }
+
+    fun deleteNotification(record: NotificationRecord) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteNotification(record)
+        }
+    }
+
+    fun toggleNotificationLock(id: Int, isLocked: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.toggleNotificationLock(id, isLocked)
+        }
+    }
+
     fun exportCrashLog(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             // 切回主线程显示 Toast
-            kotlinx.coroutines.withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 CrashHandler.exportLatestLog(context)
             }
         }

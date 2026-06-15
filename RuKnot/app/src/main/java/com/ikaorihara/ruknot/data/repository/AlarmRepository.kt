@@ -2,13 +2,16 @@ package com.ikaorihara.ruknot.data.repository // 注意这里多了 .repository
 
 import com.ikaorihara.ruknot.alarm.AlarmRule
 import com.ikaorihara.ruknot.data.AlarmDAO
+import com.ikaorihara.ruknot.data.NotificationDAO
 import com.ikaorihara.ruknot.data.StreamerDAO
+import com.ikaorihara.ruknot.notification.NotificationRecord
 import com.ikaorihara.ruknot.streamer.StreamerRoom
 import kotlinx.coroutines.flow.Flow
 
 class AlarmRepository(
     private val streamerDAO: StreamerDAO,
-    private val alarmDAO: AlarmDAO
+    private val alarmDAO: AlarmDAO,
+    private val notificationDAO: NotificationDAO
 ) {
 
     // ==========================================
@@ -18,6 +21,10 @@ class AlarmRepository(
     // 提供 Flow 数据流给 UI 观察
     fun getAllStreamersFlow(): Flow<List<StreamerRoom>> {
         return streamerDAO.getAllStreamersFlow()
+    }
+
+    suspend fun getAllRulesSync(): List<AlarmRule> {
+        return alarmDAO.getAllRulesList()
     }
 
     // 插入新主播 (AddStreamerDialog 用)
@@ -125,5 +132,34 @@ class AlarmRepository(
     // 给 UI 用：点击列表开关
     suspend fun updateRuleEnabled(id: Int, isEnabled: Boolean) {
         alarmDAO.updateRuleEnabled(id, isEnabled)
+    }
+
+    // ==========================================
+    // NotificationRecord 相关 (供 ViewModel 使用)
+    // ==========================================
+    fun getAllNotificationsFlow(): Flow<List<NotificationRecord>> {
+        return notificationDAO.getAllRecords()
+    }
+
+    suspend fun insertNotification(record: NotificationRecord) {
+        notificationDAO.insert(record)
+    }
+
+    suspend fun clearAllNotifications() {
+//        notificationDAO.clearAll()
+        notificationDAO.clearAllUnlocked()
+    }
+
+    // 删除单条通知
+    suspend fun deleteNotification(record: NotificationRecord) {
+        notificationDAO.deleteRecord(record)
+    }
+
+    suspend fun getAllNotificationsSync(): List<NotificationRecord> {
+        return notificationDAO.getAllRecordsList()
+    }
+
+    suspend fun toggleNotificationLock(id: Int, isLocked: Boolean) {
+        notificationDAO.updateLockStatus(id, isLocked)
     }
 }
