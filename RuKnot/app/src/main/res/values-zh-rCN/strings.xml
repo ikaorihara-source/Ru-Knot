@@ -236,6 +236,24 @@
     <string name="notify_new_info">%1$s有新动态了</string>
     <string name="notify_new_info_message">当系统强制杀死后台监控服务时发送此通知</string>
 
+    <string name="notify_action_view_details">点击查看详情</string>
+    <string name="notify_action_reserve_live">发起了直播预约</string>
+    <string name="notify_action_forward_dynamic">转发了动态</string>
+    <string name="notify_action_post_video">投稿了视频</string>
+    <string name="notify_action_share_pgc">分享了番剧/剧集</string>
+    <string name="notify_action_post_word">发布了文字动态</string>
+    <string name="notify_action_post_draw">发布了图文动态</string>
+    <string name="notify_action_post_article">发布了专栏文章</string>
+    <string name="notify_action_post_music">发布了音乐音频</string>
+    <string name="notify_action_share_common">分享了活动/装扮</string>
+    <string name="notify_action_start_live">开启了直播</string>
+    <string name="notify_action_share_medialist">分享了收藏夹</string>
+    <string name="notify_action_share_course">分享了课程</string>
+    <string name="notify_action_update_ugc">更新了合集</string>
+    <string name="notify_action_post_opus">发布了新版图文</string>
+    <string name="notify_action_dynamic_none">动态已失效</string>
+    <string name="notify_action_post_new_content">发布了新内容</string>
+
     <string name="about_ruru_title">关于折原露露</string>
     <string name="about_ruru_description">查看露露酱的简介。</string>
     <string name="ruru_space_title">折原露露的B站空间</string>

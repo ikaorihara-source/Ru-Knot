@@ -30,8 +30,8 @@ android {
         applicationId = "com.ikaorihara.ruknot"
         minSdk = 26
         targetSdk = 36
-        versionCode = 25
-        versionName = "1.4.4"
+        versionCode = 27
+        versionName = "1.4.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

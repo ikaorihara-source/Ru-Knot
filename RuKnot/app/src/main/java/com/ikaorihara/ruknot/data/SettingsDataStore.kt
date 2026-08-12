@@ -23,7 +23,9 @@ class SettingsDataStore(private val context: Context) {
         private val KEY_GLOBAL_VOLUME = intPreferencesKey("global_volume")
         private val KEY_BACKGROUND_PATH = stringPreferencesKey("app_background_bg_path")
         private val KEY_RANDOM_BACKGROUND = booleanPreferencesKey("is_random_background")
-//        private val KEY_GITHUB_PROXY_URL = stringPreferencesKey("github_proxy_url")
+
+        //        private val KEY_GITHUB_PROXY_URL = stringPreferencesKey("github_proxy_url")
+        private val KEY_FORCE_SPEAKER = booleanPreferencesKey("is_force_speaker")
     }
 
     // 房间数据更新频率 (默认 30秒)
@@ -123,4 +125,17 @@ class SettingsDataStore(private val context: Context) {
 //            preferences[KEY_GITHUB_PROXY_URL] = url
 //        }
 //    }
+
+    // 读取随机开关状态
+    val isForceSpeaker: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_FORCE_SPEAKER] ?: true // 默认打开
+        }
+
+    // 保存随机开关状态
+    suspend fun setForceSpeaker(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_FORCE_SPEAKER] = enabled
+        }
+    }
 }

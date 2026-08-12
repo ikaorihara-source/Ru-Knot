@@ -331,6 +331,18 @@ fun SettingsScreen(
             )
         }
 
+        // 声音输出设备设置
+        ExpandableSection(
+            title = "声音输出设备", // 建议放 strings.xml
+            icon = R.drawable.ic_music, // 换成对应的耳机/音响图标
+            initiallyExpanded = false
+        ) {
+            AudioOutputCard(
+                viewModel = viewModel,
+                onToggle = { viewModel.toggleForceSpeaker(it) }
+            )
+        }
+
         // 背景选择卡片
         ExpandableSection(
             title = stringResource(R.string.label_personalized_background),
@@ -841,6 +853,43 @@ fun GlobalVolumeCard(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
         )
+    }
+}
+
+// ==========================================
+// 声音输出设备卡片
+// ==========================================
+@Composable
+fun AudioOutputCard(
+    viewModel: MainViewModel,
+    onToggle: (Boolean) -> Unit
+) {
+    val isForceSpeaker by viewModel.isForceSpeaker.collectAsState()
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onToggle(!isForceSpeaker) }
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "强制使用扬声器外放",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "开启后，即使连接了耳机，闹钟也会通过手机底部的扬声器最大音量播放。关闭则跟随系统默认（通常只在耳机内播放）。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+            androidx.compose.material3.Switch(
+                checked = isForceSpeaker,
+                onCheckedChange = { onToggle(it) }
+            )
+        }
     }
 }
 

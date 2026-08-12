@@ -236,6 +236,24 @@
     <string name="notify_new_info">%1$s have new information.</string>
     <string name="notify_new_info_message">The system has cleared background services. Click here to restore monitoring.</string>
 
+    <string name="notify_action_view_details">Click to view details</string>
+    <string name="notify_action_reserve_live">Scheduled a live stream</string>
+    <string name="notify_action_forward_dynamic">Shared an update</string>
+    <string name="notify_action_post_video">Posted a video</string>
+    <string name="notify_action_share_pgc">Shared a show/movie</string>
+    <string name="notify_action_post_word">Posted a text update</string>
+    <string name="notify_action_post_draw">Posted an image update</string>
+    <string name="notify_action_post_article">Published an article</string>
+    <string name="notify_action_post_music">Posted an audio track</string>
+    <string name="notify_action_share_common">Shared an event/outfit</string>
+    <string name="notify_action_start_live">Started a live stream</string>
+    <string name="notify_action_share_medialist">Shared a playlist</string>
+    <string name="notify_action_share_course">Shared a course</string>
+    <string name="notify_action_update_ugc">Updated a collection</string>
+    <string name="notify_action_post_opus">Posted a new multimedia update</string>
+    <string name="notify_action_dynamic_none">Update is no longer available</string>
+    <string name="notify_action_post_new_content">Published new content</string>
+
     <string name="about_ruru_title">About Orihara RuRu</string>
     <string name="about_ruru_description">Get to know RuRu.</string>
     <string name="ruru_space_title">RuRu\'s Bilibili Space</string>

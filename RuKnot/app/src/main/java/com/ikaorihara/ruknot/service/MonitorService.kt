@@ -78,7 +78,8 @@ class MonitorService : Service() {
         super.onCreate()
         // 这里获取你的 Repository 实例 (根据你用的 Koin/Hilt 或者手动单例调整)
         val db = AppDatabase.getDatabase(applicationContext)
-        repository = AlarmRepository(db.StreamerDAO(), db.AlarmDAO(), db.NotificationDao())
+        repository =
+            AlarmRepository(db.StreamerDAO(), db.AlarmDAO(), db.NotificationDao())
 
         // 初始化 SettingsStore
         settingsStore = SettingsDataStore(applicationContext)
@@ -707,13 +708,27 @@ class MonitorService : Service() {
 
             audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
 
+            var forceSpeaker = true
+            kotlinx.coroutines.runBlocking {
+                forceSpeaker = settingsStore.isForceSpeaker.first()
+            }
+
+            val audioStreamType = if (forceSpeaker) {
+                AudioManager.STREAM_ALARM // 如果要强制外放，必须用闹钟流！因为大部分手机闹钟流会穿透耳机外放。
+            } else {
+                AudioManager.STREAM_MUSIC // 如果要走耳机，用媒体流！媒体流会乖乖听从系统调度（连了耳机就只进耳机）。
+            }
+
+            val focusUsage =
+                if (forceSpeaker) AudioAttributes.USAGE_ALARM else AudioAttributes.USAGE_MEDIA
+
             // --- 抢占音频焦点 (告诉系统我要出声了) ---
             val result =
                 audioManager?.requestAudioFocus(
                     AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
                         .setAudioAttributes(
                             AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .setUsage(focusUsage)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                 .build()
                         )
@@ -728,14 +743,20 @@ class MonitorService : Service() {
 
             // 核心：强制把闹钟声道的音量拉到最大！
             // 这行代码是穿透静音的关键。
-            val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 0
+            val maxVolume = audioManager?.getStreamMaxVolume(audioStreamType) ?: 0
             originalVolume =
-                audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: 0 // 记住原来的音量
+                audioManager?.getStreamVolume(audioStreamType) ?: 0 // 记住原来的音量
 
             if (originalVolume < maxVolume) { //(maxVolume * 0.5)
                 // 如果音量太小，强制设为最大
-                audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
+                audioManager?.setStreamVolume(audioStreamType, maxVolume, 0)
                 Log.d("AlarmActivity", "已强制将闹钟音量调至最大: $maxVolume")
+            }
+
+            // 如果强制外放，开启 Speakerphone (兜底方案，应对某些魔改系统)
+            if (forceSpeaker) {
+                @Suppress("DEPRECATION")
+                audioManager?.isSpeakerphoneOn = true
             }
 
             // 初始化播放器
@@ -743,12 +764,12 @@ class MonitorService : Service() {
                 setDataSource(applicationContext, uri)
                 setAudioAttributes(
                     AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM) // 必须是 ALARM 通道
+                        .setUsage(focusUsage) // 必须是 ALARM 通道
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .build()
                 )
 
-                // ★★★ 应用用户设定的音量 ★★★
+                // 应用用户设定的音量
                 // MediaPlayer 的音量是 0.0f 到 1.0f
                 val vol = volumePercent / 100f
                 setVolume(vol, vol)
@@ -757,16 +778,6 @@ class MonitorService : Service() {
                 prepare()
                 start()
             }
-
-//            // 开启震动
-//            vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                val vibratorManager =
-//                    getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
-//                vibratorManager.defaultVibrator
-//            } else {
-//                @Suppress("DEPRECATION")
-//                getSystemService(VIBRATOR_SERVICE) as Vibrator
-//            }
 
             vibrator?.vibrate(android.os.VibrationEffect.createWaveform(pattern, 0))
 
@@ -791,7 +802,12 @@ class MonitorService : Service() {
 
             if (originalVolume != -1) {
                 audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
+                audioManager?.setStreamVolume(AudioManager.STREAM_MUSIC, originalVolume, 0)
             }
+
+            // 恢复 Speakerphone 状态
+            @Suppress("DEPRECATION")
+            audioManager?.isSpeakerphoneOn = false
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1022,56 +1038,49 @@ class MonitorService : Service() {
                             }
 
                             if (newDynamics.isNotEmpty()) {
-                                newDynamics.sortedBy { it.modules?.moduleAuthor?.pubTs ?: 0L }.forEach { item ->
-                                    val dynamicId = item.idStr
-                                    var text: String? = getString(R.string.notify_new_info_message)
+                                newDynamics.sortedBy { it.modules?.moduleAuthor?.pubTs ?: 0L }
+                                    .forEach { item ->
+                                        val dynamicId = item.idStr
 
-                                    // 解析 App 接口特有的 JSON 字符串 (cardStr) 来提取正文
-                                    try {
-                                        text = item.modules?.moduleDynamic?.desc?.text
-                                        if (text.isNullOrEmpty()) {
-                                            text = item.modules?.moduleDynamic?.major?.archive?.title
+                                        // 核心：获取具体动作作为标题
+                                        val action = getDynamicAction(item)
+                                        val title = "${streamer.userName} $action"
+
+                                        // 核心：递归提取正文
+                                        var text = extractDynamicText(item)
+                                        if (text.isEmpty()) {
+                                            text = getString(R.string.notify_action_view_details)
                                         }
-                                        if (text.isNullOrEmpty()) {
-                                            text = item.modules?.moduleDynamic?.major?.archive?.desc
+
+                                        var shortText = text.take(100)
+                                        if (text.length > 100) {
+                                            shortText += "..."
                                         }
-                                        if (text.isNullOrEmpty()) {
-                                            text = getString(R.string.notify_new_info_message)
-                                        }
-                                    } catch (e: Exception) {
-                                        Log.e("MonitorService", "解析动态 JSON 失败", e)
-                                    }
 
-                                    var shortText = text?.take(100)
-                                    text?.length?.let { if (it > 100 ) shortText += "..." }
+                                        Log.d("MonitorService", "推送新动态: $dynamicId")
 
-//                                    Log.d("MonitorService", "推送新动态: $dynamicId")
-
-                                    val title =
-                                        getString(R.string.notify_new_info, streamer.userName)
-
-                                    sendDynamicNotification(
-                                        title = title,
-                                        message = shortText,
-                                        avatarUrl = streamer.avatarUrl,
-                                        dynamicId = dynamicId
-                                    )
-
-                                    repository.insertNotification(
-                                        NotificationRecord(
+                                        sendDynamicNotification(
                                             title = title,
-                                            message = text, // 这里的 text 就是你解析出来的正文
-                                            timestamp = System.currentTimeMillis(),
-                                            type = "DYNAMIC",
-                                            roomId = streamer.roomId,
-                                            userId = streamer.userId,
-                                            dynamicId = dynamicId, // 确保这里传入你提取的动态 ID
-                                            avatarUrl = streamer.avatarUrl
+                                            message = shortText,
+                                            avatarUrl = streamer.avatarUrl,
+                                            dynamicId = dynamicId
                                         )
-                                    )
 
-                                    delay(500)
-                                }
+                                        repository.insertNotification(
+                                            NotificationRecord(
+                                                title = title,
+                                                message = text, // 这里的 text 就是你解析出来的正文
+                                                timestamp = System.currentTimeMillis(),
+                                                type = "DYNAMIC",
+                                                roomId = streamer.roomId,
+                                                userId = streamer.userId,
+                                                dynamicId = dynamicId, // 确保这里传入你提取的动态 ID
+                                                avatarUrl = streamer.avatarUrl
+                                            )
+                                        )
+
+                                        delay(500)
+                                    }
 
                                 // 无论有没有新通知（哪怕是因为删动态触发的空过），都要将指针刷新到当前最新
                                 sp.edit {
@@ -1094,9 +1103,63 @@ class MonitorService : Service() {
                 val jitterMs = Random.nextLong(1, 301)
 
                 // 稍微停顿 1 秒，防止短时间内并发请求太多被封 IP
-                delay(15000L + jitterMs)
+                delay(5000L + jitterMs)
             }
         }
+    }
+
+    // 智能判断动态动作（返回 "发布了视频"、"发起了直播预约" 等）
+    private fun getDynamicAction(item: BiliAppDynamicItem): String {
+        // 优先使用 B 站官方返回的动作描述（例如："投稿了视频"）
+        val pubAction = item.modules?.moduleAuthor?.pubAction
+        if (!pubAction.isNullOrEmpty()) {
+            return pubAction
+        }
+
+        // 根据附加卡片判断（例如直播预约）
+        val additionalType = item.modules?.moduleDynamic?.additional?.type
+        if (additionalType == "ADDITIONAL_TYPE_RESERVE") {
+            return getString(R.string.notify_action_reserve_live)
+        }
+
+        // 根据动态类型判断兜底
+        return when (item.type) {
+            "DYNAMIC_TYPE_FORWARD" -> getString(R.string.notify_action_forward_dynamic)//"转发了动态"
+            "DYNAMIC_TYPE_AV" -> getString(R.string.notify_action_post_video)//"投稿了视频"
+            "DYNAMIC_TYPE_PGC" -> getString(R.string.notify_action_share_pgc)//"分享了番剧/剧集"
+            "DYNAMIC_TYPE_WORD" -> getString(R.string.notify_action_post_word)//"发布了文字动态"
+            "DYNAMIC_TYPE_DRAW" -> getString(R.string.notify_action_post_draw)//"发布了图文动态"
+            "DYNAMIC_TYPE_ARTICLE" -> getString(R.string.notify_action_post_article)//"发布了专栏文章"
+            "DYNAMIC_TYPE_MUSIC" -> getString(R.string.notify_action_post_music)//"发布了音乐音频"
+            "DYNAMIC_TYPE_COMMON_SQUARE", "DYNAMIC_TYPE_COMMON_VERTICAL" -> getString(R.string.notify_action_share_common)//"分享了活动/装扮"
+            "DYNAMIC_TYPE_LIVE", "DYNAMIC_TYPE_LIVE_RCMD" -> getString(R.string.notify_action_start_live)//"开启了直播"
+            "DYNAMIC_TYPE_MEDIALIST" -> getString(R.string.notify_action_share_medialist)//"分享了收藏夹"
+            "DYNAMIC_TYPE_COURSES_SEASON", "DYNAMIC_TYPE_COURSES_BATCH", "DYNAMIC_TYPE_COURSES" -> getString(
+                R.string.notify_action_share_course
+            ) //"DYNAMIC_TYPE_COURSES_BATCH", "DYNAMIC_TYPE_COURSES" -> "分享了课程"
+            "DYNAMIC_TYPE_UGC_SEASON" -> getString(R.string.notify_action_update_ugc)//"更新了合集"
+            "DYNAMIC_TYPE_OPUS" -> getString(R.string.notify_action_post_opus)//"发布了新版图文" // 补充常见的 Opus 类型
+            "DYNAMIC_TYPE_NONE" -> getString(R.string.notify_action_dynamic_none)//"动态已失效"
+            else -> getString(R.string.notify_action_post_new_content)//"发布了新内容" // 兜底
+        }
+    }
+
+    // 深度递归提取动态正文 (支持视频、图文、专栏、预约、转发)
+    private fun extractDynamicText(item: BiliAppDynamicItem?): String {
+        if (item == null) return ""
+
+        val dynamic = item.modules?.moduleDynamic
+
+        // 提取核心文本
+        val text = dynamic?.desc?.text
+            ?: dynamic?.major?.archive?.title
+            ?: dynamic?.major?.article?.title
+            ?: dynamic?.major?.opus?.title ?: dynamic?.major?.opus?.summary?.text
+            ?: dynamic?.additional?.reserve?.title
+            ?: dynamic?.major?.common?.title
+
+        // 递归去 orig(原动态) 中找（应对转发）
+        return text ?: extractDynamicText(item.orig)
     }
 
     // 发送动态专用通知 (点击跳转B站动态页)

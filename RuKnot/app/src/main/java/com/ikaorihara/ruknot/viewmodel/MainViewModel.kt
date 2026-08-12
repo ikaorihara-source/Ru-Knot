@@ -118,6 +118,9 @@ class MainViewModel(
 //    val currentProxyUrl: StateFlow<String> = settingsDataStore.githubProxyUrl
 //        .stateIn(viewModelScope, SharingStarted.Lazily, "https://gh-proxy.com/")
 
+    val isForceSpeaker: StateFlow<Boolean> = settingsDataStore.isForceSpeaker
+        .stateIn(viewModelScope, SharingStarted.Lazily, true)
+
     private val baseUrl =
         "https://orihararurubutton.blob.core.windows.net/orihararurubuttoncontainer/"
 
@@ -504,6 +507,12 @@ class MainViewModel(
 //        }
 //    }
 
+    fun toggleForceSpeaker(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setForceSpeaker(enabled)
+        }
+    }
+
     // 增加修改方法供 UI 调用
     fun updateBiliCookie(cookie: String) {
         val cleanCookie = cookie.replace("\n", "").replace("\r", "").trim()
@@ -516,7 +525,11 @@ class MainViewModel(
     // 测试 COOKIE 是否有效
     fun testCookie(testToken: String, context: Context) {
         if (testToken.isBlank()) {
-            Toast.makeText(context, context.getString(R.string.toast_empty_cookie), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.toast_empty_cookie),
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
@@ -535,15 +548,27 @@ class MainViewModel(
                 // 判断 code 是否为 0
                 withContext(Dispatchers.Main) {
                     if (response.code == 0) {
-                        Toast.makeText(context, context.getString(R.string.toast_test_success), Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.toast_test_success),
+                            Toast.LENGTH_LONG
+                        ).show()
                     } else {
                         // 通常 -101 代表未登录
-                        Toast.makeText(context, context.getString(R.string.toast_test_failed, response.code.toString()), Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.toast_test_failed, response.code.toString()),
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             } catch (_: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, context.getString(R.string.toast_network_error), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.toast_network_error),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -567,6 +592,7 @@ class MainViewModel(
             val cookie = settingsDataStore.biliCookie.first()
             val volume = settingsDataStore.globalVolume.first()
 //            val proxy = settingsDataStore.githubProxyUrl.first()
+            val forceSpeaker = settingsDataStore.isForceSpeaker.first()
 
             // 从 ThemeStorage 获取当前主题
             val themeName = themeMode.value.name
@@ -578,7 +604,8 @@ class MainViewModel(
                 userUpdateInterval = userInterval,
                 dynamicUpdateInterval = dynamicInterval,
                 biliCookie = cookie,
-                globalVolume = volume
+                globalVolume = volume,
+                forceSpeaker = forceSpeaker
             )
 
             // 调用 Manager 进行导出
@@ -619,6 +646,7 @@ class MainViewModel(
                 settingsDataStore.saveDynamicUpdateInterval(restored.dynamicUpdateInterval)
                 settingsDataStore.saveBiliCookie(restored.biliCookie)
                 settingsDataStore.setGlobalVolume(restored.globalVolume)
+                settingsDataStore.setForceSpeaker(restored.forceSpeaker)
             }
         }
     }
@@ -864,6 +892,33 @@ class MainViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             repository.toggleNotificationLock(id, isLocked)
         }
+    }
+
+    // ==========================================
+    // 爆米账本 (Gachikoi Ledger) 状态与逻辑
+    // ==========================================
+
+    // 筛选状态
+    val selectedStreamerIds = MutableStateFlow<Set<Long>>(emptySet())
+    val filterStartTime = MutableStateFlow(0L) // 默认 0 (代表从最初开始)
+    val filterEndTime = MutableStateFlow(System.currentTimeMillis())
+
+    fun toggleStreamerSelection(userId: Long) {
+        val currentSet = selectedStreamerIds.value.toMutableSet()
+        if (currentSet.contains(userId)) currentSet.remove(userId)
+        else currentSet.add(userId)
+        selectedStreamerIds.value = currentSet
+    }
+
+    // 默认全选所有已添加的主播
+    fun selectAllStreamers() {
+        val allIds = rooms.value.map { it.userId }.toSet()
+        selectedStreamerIds.value = allIds
+    }
+
+    fun updateTimeRange(start: Long, end: Long?) {
+        filterStartTime.value = start
+        filterEndTime.value = end ?: System.currentTimeMillis()
     }
 
     fun exportCrashLog(context: Context) {

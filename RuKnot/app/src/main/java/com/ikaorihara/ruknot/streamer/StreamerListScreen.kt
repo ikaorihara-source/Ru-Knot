@@ -2,7 +2,6 @@ package com.ikaorihara.ruknot.streamer
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -157,10 +156,6 @@ fun StreamerListScreen(viewModel: MainViewModel) {
                     ReorderableItem(reorderableState, key = room.roomId) { isDragging ->
 
                         // 拖拽时的视觉效果：浮起 + 阴影
-                        val elevation by animateDpAsState(
-                            if (isDragging) 8.dp else 0.dp,
-                            label = "elevation"
-                        )
 
                         // 用 Box 包裹卡片，并应用 longPressDraggable 修改器
                         Box(

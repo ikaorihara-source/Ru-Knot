@@ -45,7 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // ★ 3. 添加版本 3 升 4 的迁移脚本
+        // 添加版本 3 升 4 的迁移脚本
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
@@ -66,7 +66,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // ★ 版本 4 升 5 的迁移脚本 (给表加上 is_locked 字段)
+        // 版本 4 升 5 的迁移脚本 (给表加上 is_locked 字段)
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `notification_history` ADD COLUMN `is_locked` INTEGER NOT NULL DEFAULT 0")

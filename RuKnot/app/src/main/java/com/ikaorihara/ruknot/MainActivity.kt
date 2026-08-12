@@ -96,7 +96,11 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels {
         val database = AppDatabase.getDatabase(applicationContext)
         val repository =
-            AlarmRepository(database.StreamerDAO(), database.AlarmDAO(), database.NotificationDao())
+            AlarmRepository(
+                database.StreamerDAO(),
+                database.AlarmDAO(),
+                database.NotificationDao()
+            )
 
         // 把 application 也传进去
         MainViewModelFactory(application, repository)
@@ -685,6 +689,18 @@ fun MainScreen(viewModel: MainViewModel) {
                         Text(stringResource(R.string.app_name), fontWeight = FontWeight.Bold)
                     },
                     actions = {
+//                        // 账本按钮
+//                        IconButton(onClick = { navController.navigate("gachikoi_ledger") }) {
+//                            Icon(
+//                                painter = painterResource(id = R.drawable.ic_ledger),
+//                                contentDescription = "爆米账本",
+//
+//                                tint = Color.Unspecified,
+//
+//                                modifier = Modifier.size(30.dp)
+//                            )
+//                        }
+
                         // 小铃铛按钮
                         IconButton(onClick = { navController.navigate("notification_history") }) {
                             Icon(
@@ -749,7 +765,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         onClick = {
                             // 如果当前正停留在消息中心，切换 Tab 时先把它 pop 掉
                             // 这样原 Tab 保存状态时就不会包含消息中心，切回来时就是干净的根主页
-                            if (currentRoute == "notification_history") {
+                            if (currentRoute == "notification_history") { // || currentRoute == "gachikoi_ledger"
                                 navController.popBackStack()
                             }
 

@@ -33,8 +33,9 @@ data class AppSettings(
     val userUpdateInterval: Long,
     val dynamicUpdateInterval: Long,
     val biliCookie: String,
-    val globalVolume: Int
+    val globalVolume: Int,
 //    val proxyUrl: String
+    val forceSpeaker: Boolean
 )
 
 // 总备份结构

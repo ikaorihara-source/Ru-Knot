@@ -143,7 +143,10 @@ fun NotificationHistoryScreen(
                             when (dismissValue) {
                                 // 右滑 (StartToEnd)：切换锁定状态
                                 SwipeToDismissBoxValue.StartToEnd -> {
-                                    viewModel.toggleNotificationLock(currentRecord.id, !currentRecord.isLocked)
+                                    viewModel.toggleNotificationLock(
+                                        currentRecord.id,
+                                        !currentRecord.isLocked
+                                    )
                                     false // 返回 false 会让卡片像弹簧一样缩回去（不消失）
                                 }
                                 // 左滑 (EndToStart)：如果是未锁定状态，则删除
@@ -155,6 +158,7 @@ fun NotificationHistoryScreen(
                                         false
                                     }
                                 }
+
                                 else -> false
                             }
                         }
